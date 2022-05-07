@@ -1,0 +1,73 @@
+{
+    "name": "English",
+    "common": {
+        "warning": "Warning",
+        "confirm": "Confirm",
+        "cancel": "Cancel",
+        "timeout": "Connection Time Out"
+    },
+    "appbar": {
+        "homepage": "Homepage",
+        "tools": "Tools",
+        "login": "Login",
+        "developing": "Developing",
+        "language": "Lang",
+        "files": "Files Storage",
+        "nan4628": "Dormitory"
+    },
+    "home": {
+        "title1": "Why don't you come to the planetarium?",
+        "title2": "The beautiful twinkling of eternity that will never fade,",
+        "title3": "no matter what.",
+        "title4": "All the stars in the sky are waiting for you."
+    },
+    "files": {
+        "updateInfo": "Document classification will be introduced in the next version. Notice to do local backups avoiding missing your files.",
+        "uploadText": "Drop files here or <em>click to upload</em>",
+        "uploadTip": "Any files with a size less than 10MB",
+        "uploadFailed": "File \"{file}\" uploaded failed",
+        "getFileFailed": "Get Files Failed",
+        "createTime": "Create Time",
+        "filename": "File Name",
+        "author": "Author",
+        "size": "Size",
+        "tags": "Tags",
+        "operations": "Operations",
+        "download": "Download",
+        "copy": "Copy",
+        "copySuccess": "Download url copied to clipboard",
+        "copyFailed": "Permission denied. Copy this url yourself: {url}",
+        "delete": "Delete",
+        "deleteWarning": "Remove file \"{filename}\"? (forever)",
+        "deleteFailed": "Failed"
+    },
+    "nan4628": {
+        "title": "Cleaning Arrangement",
+        "pickDay": "Pick a day",
+        "name": "Name",
+        "work": "Work"
+    },
+    "login": {
+        "loginTitle": "Log in",
+        "registerTitle": "Register",
+        "username": "Username",
+        "usernameRule": "username must be letters and digits with length between 4 and 20",
+        "password": "Password",
+        "passwordRule": "password must be letters, characters and digits with length between 6 and 20",
+        "repeat": "Repeat",
+        "repeatRule": "password not correct",
+        "email": "Email",
+        "emailRule": "invalid email address",
+        "sendCaptcha": "Send Captcha",
+        "captcha": "Captcha",
+        "captchaRule": "captcha can not be null",
+        "keepLogin": "Keep Login",
+        "forgotPassword": "Forgot Password>",
+        "login": "Log in",
+        "register": "Register",
+        "whatcanido": "What can I do",
+        "icando": "nothing",
+        "registerLink": "Register Now",
+        "loginLink": "Back to Login"
+    }
+}

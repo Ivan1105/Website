@@ -1,0 +1,73 @@
+{
+    "name": "简体中文",
+    "common": {
+        "warning": "警告",
+        "confirm": "确定",
+        "cancel": "取消",
+        "timeout": "连接超时"
+    },
+    "appbar": {
+        "homepage": "首页",
+        "tools": "工具",
+        "login": "登录",
+        "developing": "开发中",
+        "language": "语言",
+        "files": "文件存储",
+        "nan4628": "宿舍卫生安排"
+    },
+    "home": {
+        "title1": "欢迎光临星象馆",
+        "title2": "这里有无论何时都不会消失",
+        "title3": "美丽的无穷光辉",
+        "title4": "漫天繁星等候您的到来"
+    },
+    "files": {
+        "updateInfo": "此页面将在下个版本更新文件分类系统，请注意在本地备份您的文件，避免文件丢失",
+        "uploadText": "拖拽文件至此处或者<em>点击上传</em>",
+        "uploadTip": "文件大小限制不超过10MB",
+        "uploadFailed": "文件“{file}”上传失败",
+        "getFileFailed": "获取文件列表失败",
+        "createTime": "创建时间",
+        "filename": "文件名",
+        "author": "创建者",
+        "size": "文件大小",
+        "tags": "标签",
+        "operations": "操作",
+        "download": "下载",
+        "copy": "复制",
+        "copySuccess": "下载链接已复制到剪切板",
+        "copyFailed": "复制失败，请手动复制此链接：{url}",
+        "delete": "删除",
+        "deleteWarning": "真的要删除“{filename}”这个文件吗（不可恢复）？",
+        "deleteFailed": "删除失败"
+    },
+    "nan4628": {
+        "title": "宿舍卫生安排",
+        "pickDay": "选择日期",
+        "name": "姓名",
+        "work": "任务"
+    },
+    "login": {
+        "loginTitle": "用户登录",
+        "registerTitle": "用户注册",
+        "username": "用户名",
+        "usernameRule": "必须是4~20位的大小写字母或数字",
+        "password": "密码",
+        "passwordRule": "必须是6~20位的字母符号或数字",
+        "repeat": "再次输入密码",
+        "repeatRule": "两次密码不一致",
+        "email": "邮箱",
+        "emailRule": "无效的邮箱地址",
+        "sendCaptcha": "发送验证码",
+        "captcha": "验证码",
+        "captchaRule": "验证码不能为空",
+        "keepLogin": "保持登录状态",
+        "forgotPassword": "忘记密码>",
+        "login": "登录",
+        "register": "注册",
+        "whatcanido": "登录后能做些什么",
+        "icando": "目前登录并没有任何作用",
+        "registerLink": "立即注册",
+        "loginLink": "返回登录"
+    }
+}

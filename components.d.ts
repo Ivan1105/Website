@@ -4,9 +4,19 @@
 
 declare module 'vue' {
   export interface GlobalComponents {
-    HelloWorld: typeof import('./src/components/HelloWorld.vue')['default']
+    Appbar: typeof import('./src/components/Appbar/index.vue')['default']
     NButton: typeof import('naive-ui')['NButton']
-    NSpace: typeof import('naive-ui')['NSpace']
+    NConfigProvider: typeof import('naive-ui')['NConfigProvider']
+    NDataTable: typeof import('naive-ui')['NDataTable']
+    NDropdown: typeof import('naive-ui')['NDropdown']
+    NEl: typeof import('naive-ui')['NEl']
+    NH1: typeof import('naive-ui')['NH1']
+    NIcon: typeof import('naive-ui')['NIcon']
+    NLoadingBarProvider: typeof import('naive-ui')['NLoadingBarProvider']
+    NMenu: typeof import('naive-ui')['NMenu']
+    NP: typeof import('naive-ui')['NP']
+    NRadioButton: typeof import('naive-ui')['NRadioButton']
+    NRadioGroup: typeof import('naive-ui')['NRadioGroup']
   }
 }
 

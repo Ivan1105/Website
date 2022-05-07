@@ -2,6 +2,16 @@
 // We suggest you to commit this file into source control
 declare global {
   const NButton: typeof import('naive-ui')['NButton']
-  const NSpace: typeof import('naive-ui')['NSpace']
+  const NConfigProvider: typeof import('naive-ui')['NConfigProvider']
+  const NDataTable: typeof import('naive-ui')['NDataTable']
+  const NDropdown: typeof import('naive-ui')['NDropdown']
+  const NEl: typeof import('naive-ui')['NEl']
+  const NH1: typeof import('naive-ui')['NH1']
+  const NIcon: typeof import('naive-ui')['NIcon']
+  const NLoadingBarProvider: typeof import('naive-ui')['NLoadingBarProvider']
+  const NMenu: typeof import('naive-ui')['NMenu']
+  const NP: typeof import('naive-ui')['NP']
+  const NRadioButton: typeof import('naive-ui')['NRadioButton']
+  const NRadioGroup: typeof import('naive-ui')['NRadioGroup']
 }
 export {}
