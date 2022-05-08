@@ -20,6 +20,7 @@ header {
         justify-content: space-between;
         height: $appbar-height;
         padding: 0 2em;
+        color: var(--text-color-1);
 
         @media (min-width: $screen-sm) {
             padding: 0;

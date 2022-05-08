@@ -59,6 +59,7 @@ import {
   toRefs,
   computed,
   ComputedRef,
+  onMounted,
 } from "@vue/runtime-core";
 import {
   darkTheme,
@@ -112,9 +113,7 @@ export default defineComponent({
       {
         type: "button",
         label:
-          theme.value === null
-            ? t("appbar.darkTheme")
-            : t("appbar.lightTheme"),
+          theme.value === null ? t("appbar.darkTheme") : t("appbar.lightTheme"),
         key: "theme",
       },
       {
@@ -139,14 +138,39 @@ export default defineComponent({
     /** 主题变量 */
     const themeVars = useThemeVars();
     /** 切换主题 */
-    function changeTheme() {
-      if (theme.value === null) context.emit("update:theme", darkTheme);
-      else context.emit("update:theme", null);
+    function changeTheme(targetTheme = "") {
+      if (targetTheme === "dark") context.emit("update:theme", darkTheme);
+      else if (targetTheme === "light") context.emit("update:theme", null);
+      else {
+        if (theme.value === null) {
+          window.sessionStorage.setItem("themeMode", "dark");
+          context.emit("update:theme", darkTheme);
+        } else {
+          window.sessionStorage.setItem("themeMode", "light");
+          context.emit("update:theme", null);
+        }
+      }
       nextTick(() => {
         document.querySelector("body")!.style.backgroundColor =
           themeVars.value.bodyColor;
       });
     }
+    /** 自动切换主题 */
+    function autoChangeTheme() {
+      const targetTheme = window.sessionStorage.getItem("themeMode");
+      if (targetTheme) changeTheme(targetTheme);
+      else if (window.matchMedia("(prefers-color-scheme:dark)").matches)
+        changeTheme("dark");
+      else if (window.matchMedia("(prefers-color-scheme:light)").matches)
+        changeTheme("light");
+    }
+
+    window
+      .matchMedia("(prefers-color-scheme:dark)")
+      .addEventListener("change", autoChangeTheme);
+    onMounted(() => {
+      autoChangeTheme();
+    });
 
     return { links, handleLinksSelect };
   },
