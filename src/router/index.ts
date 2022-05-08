@@ -8,8 +8,9 @@ const routes: Array<RouteRecordRaw> = [
     component: Home
   },
   {
-    path: '/tool',
+    path: '/tools',
     name: 'Tool',
+    meta: { title: 'Tools' },
     component: () => import('@/views/Tool.vue'),
     children: [
       {
@@ -37,7 +38,10 @@ router.beforeEach(() => {
   window.loadingBar?.start();
 })
 
-router.afterEach(() => {
+router.afterEach((to) => {
+  const title = to.matched[0].meta.title as string;
+  if (title) document.title = 'Ivan1105 - ' + title;
+  else document.title = 'Ivan1105';
   window.loadingBar?.finish();
 })
 
