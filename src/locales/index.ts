@@ -1,3 +1,4 @@
+import { DropdownOption } from "naive-ui";
 import { createI18n } from "vue-i18n"
 
 const getDefaultLanguage = function () {
@@ -19,16 +20,11 @@ const i18n = createI18n({
     messages: locales
 })
 
-interface languageList {
-    label: string,
-    key: keyof typeof locales
-}
-
 /** 获取支持的语言列表 */
 export const listLanguages = () => {
-    const res: languageList[] = [];
+    const res: DropdownOption[] = [];
     Object.entries(locales).forEach(([k, v]) => {
-        res.push({ label: v.name, key: k as keyof typeof locales })
+        res.push({ type: 'language', label: v.name, key: k as keyof typeof locales })
     })
     return res;
 }

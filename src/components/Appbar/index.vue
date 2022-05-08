@@ -1,37 +1,75 @@
 <template>
   <n-el tag="header">
-    <a href="/" class="logo">
-      <img src="/favicon.ico" alt="" />
-      <span>Ivan1105</span>
-    </a>
-
-    <nav class="links">
-      <router-link to="/">首页</router-link>
-      <router-link to="/tool">工具</router-link>
-    </nav>
-
-    <div class="right">
-      <n-button text @click="changeTheme">
-        <template v-if="theme === null">深色模式</template>
-        <template v-else>浅色模式</template>
-      </n-button>
-      <n-dropdown trigger="hover" :options="languages" @select="setLanguage">
-        <n-button class="dropdown-menu" text>
-          {{ $t("appbar.language") }}
+    <div class="logo">
+      <a href="/">
+        <img src="/favicon.ico" alt="" />
+        <span>Ivan1105</span>
+      </a>
+      <n-dropdown
+        trigger="click"
+        placement="bottom-end"
+        show-arrow
+        :options="links"
+        @select="handleLinksSelect"
+      >
+        <n-button text>
           <n-icon>
-            <chevron-down-outline></chevron-down-outline>
+            <menu-outline></menu-outline>
           </n-icon>
         </n-button>
       </n-dropdown>
     </div>
+
+    <nav class="links">
+      <template v-for="link in links" :key="link">
+        <router-link v-if="link.type === 'route'" :to="link.key">
+          {{ link.label }}
+        </router-link>
+        <n-button
+          v-else-if="link.type === 'button'"
+          text
+          @click="handleLinksSelect(link.key, link)"
+        >
+          {{ link.label }}
+        </n-button>
+        <div v-else-if="link.type === 'divider'" class="divider"></div>
+        <n-dropdown
+          v-else
+          trigger="hover"
+          show-arrow
+          :options="link.children"
+          @select="handleLinksSelect"
+        >
+          <n-button class="dropdown-menu" text>
+            {{ link.label }}
+            <n-icon>
+              <chevron-down-outline></chevron-down-outline>
+            </n-icon>
+          </n-button>
+        </n-dropdown>
+      </template>
+    </nav>
   </n-el>
 </template>
 
 <script lang="ts">
-import { defineComponent, nextTick, toRefs } from "@vue/runtime-core";
-import { darkTheme, useLoadingBar, useThemeVars } from "naive-ui";
-import { ChevronDownOutline } from "@vicons/ionicons5";
+import {
+  defineComponent,
+  nextTick,
+  toRefs,
+  computed,
+  ComputedRef,
+} from "@vue/runtime-core";
+import {
+  darkTheme,
+  DropdownOption,
+  useLoadingBar,
+  useThemeVars,
+} from "naive-ui";
+import { ChevronDownOutline, MenuOutline } from "@vicons/ionicons5";
 import { listLanguages, setLanguage } from "@/locales";
+import { useRouter } from "vue-router";
+import { useI18n } from "vue-i18n";
 
 /** 系统支持的语言 */
 const languages = listLanguages();
@@ -43,8 +81,54 @@ export default defineComponent({
   emits: ["update:theme"],
   components: {
     ChevronDownOutline,
+    MenuOutline,
   },
   setup(props, context) {
+    const { theme } = toRefs(props);
+    const $router = useRouter();
+    const { t } = useI18n();
+
+    /** 导航栏链接 */
+    const links: ComputedRef<DropdownOption[]> = computed(() => [
+      {
+        type: "route",
+        label: "首页",
+        key: "/",
+      },
+      {
+        type: "route",
+        label: "工具",
+        key: "/tool",
+      },
+      {
+        type: "divider",
+        key: "d1",
+      },
+      {
+        type: "route",
+        label: "登录",
+        key: "/login",
+      },
+      {
+        type: "button",
+        label: theme.value === null ? "深色模式" : "浅色模式",
+        key: "theme",
+      },
+      {
+        label: t("appbar.language"),
+        key: "language",
+        children: languages,
+      },
+    ]);
+    /** 导航栏链接监听事件 */
+    function handleLinksSelect(key: string, val: DropdownOption) {
+      if (val.type === "route") $router.push(key);
+      else if (val.type === "language") setLanguage(key);
+      else if (val.type === "button") {
+        if (key === "theme") changeTheme();
+      }
+    }
+
     /** 加载条 */
     const loadingBar = useLoadingBar();
     window.loadingBar = loadingBar;
@@ -53,7 +137,6 @@ export default defineComponent({
     const themeVars = useThemeVars();
     /** 切换主题 */
     function changeTheme() {
-      const { theme } = toRefs(props);
       if (theme.value === null) context.emit("update:theme", darkTheme);
       else context.emit("update:theme", null);
       nextTick(() => {
@@ -62,7 +145,7 @@ export default defineComponent({
       });
     }
 
-    return { languages, setLanguage, changeTheme };
+    return { links, handleLinksSelect };
   },
 });
 </script>

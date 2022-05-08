@@ -4,7 +4,7 @@
       <appbar v-model:theme="theme"></appbar>
     </n-loading-bar-provider>
   </n-config-provider>
-  <router-view />
+  <!-- <router-view /> -->
 </template>
 
 <script lang="ts">

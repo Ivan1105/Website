@@ -2,37 +2,69 @@
 
 header {
     height: $appbar-height;
-    display: flex;
-    align-items: center;
-    padding-left: 20%;
     border-bottom: 1px solid var(--border-color);
     background-color: var(--card-color);
     color: var(--text-color-1);
     transition: all 0.3s;
     font-family: var(--font-family);
 
+    @media (min-width: $screen-sm) {
+        display: flex;
+        align-items: center;
+        padding-left: 20%;
+    }
+
     .logo {
         display: flex;
         align-items: center;
+        justify-content: space-between;
+        height: $appbar-height;
+        padding: 0 2em;
 
-        img {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
+        @media (min-width: $screen-sm) {
+            padding: 0;
         }
 
-        span {
-            margin-left: 0.7em;
-            font-size: 20px;
+        a {
+            display: flex;
+            align-items: center;
+
+            img {
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+            }
+
+            span {
+                margin-left: 0.7em;
+                font-size: 20px;
+            }
+        }
+
+        button {
+            font-size: 24px;
+
+            @media (min-width: $screen-sm) {
+                display: none;
+            }
         }
     }
 
     .links {
-        margin-left: 3em;
-        display: flex;
-        align-items: center;
+        display: none;
 
-        a {
+        @media (min-width: $screen-sm) {
+            display: flex;
+            flex-grow: 1;
+            margin-left: 3em;
+            align-items: center;
+        }
+
+        .divider {
+            margin-left: auto;
+        }
+
+        &>a {
             line-height: $appbar-height;
             padding: 0 1.5em;
             color: var(--text-color-1);
@@ -57,12 +89,8 @@ header {
                 }
             }
         }
-    }
 
-    .right {
-        margin-left: auto;
-
-        &>.n-button {
+        &>button {
             line-height: $appbar-height;
             padding: 0 1.5em;
 
