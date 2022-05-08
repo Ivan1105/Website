@@ -1,0 +1,45 @@
+$bottom: 40px;
+
+.back-top {
+    visibility: hidden;
+    opacity: 0;
+    position: fixed;
+    right: 40px;
+    bottom: $bottom;
+    z-index: 1;
+    cursor: pointer;
+    transition: opacity 0.3s;
+
+    &.show {
+        visibility: visible;
+        opacity: 1;
+    }
+
+    &.scrolling {
+        animation: backToTop 0.5s ease-in 0s 1 normal forwards;
+    }
+
+    img {
+        position: relative;
+        display: block;
+        width: 80px;
+        bottom: 0;
+        transition: bottom 0.3s;
+    }
+
+    &:hover {
+        img {
+            bottom: -1em;
+        }
+    }
+}
+
+@keyframes backToTop {
+    from {
+        bottom: $bottom;
+    }
+
+    to {
+        bottom: 100vh;
+    }
+}

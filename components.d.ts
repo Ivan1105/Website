@@ -6,6 +6,7 @@ declare module 'vue' {
   export interface GlobalComponents {
     Appbar: typeof import('./src/components/Appbar/index.vue')['default']
     Effects: typeof import('./src/components/Effects/index.vue')['default']
+    NBackTop: typeof import('naive-ui')['NBackTop']
     NButton: typeof import('naive-ui')['NButton']
     NConfigProvider: typeof import('naive-ui')['NConfigProvider']
     NDataTable: typeof import('naive-ui')['NDataTable']

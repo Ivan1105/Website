@@ -9,9 +9,9 @@ const routes: Array<RouteRecordRaw> = [
   },
   {
     path: '/tools',
-    name: 'Tool',
+    name: 'Tools',
     meta: { title: 'Tools' },
-    component: () => import('@/views/Tool.vue'),
+    component: () => import('@/views/Tools/index.vue'),
     children: [
       {
         path: '',
