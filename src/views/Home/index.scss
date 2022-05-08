@@ -1,0 +1,79 @@
+@import '@/assets/vars.scss';
+
+.img,
+.title {
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.img {
+    background-attachment: fixed;
+    background-size: cover;
+    background-position: center center;
+    height: 100vh;
+    user-select: none;
+    color: #fff;
+    font-size: 3vmax;
+    text-shadow: -1px -1px 1px #aaa, 2px 2px 1px #363636;
+    overflow: hidden;
+    position: relative;
+}
+
+.title {
+    color: var(--text-color-1);
+    background-color: var(--body-color);
+    height: 30vh;
+    font-size: 2vmax;
+    position: relative;
+    box-shadow: 0px -50px 50px #0005, 0px 50px 50px #0005;
+
+    @media (min-width: $screen-sm) {
+        height: 50vh;
+    }
+}
+
+.footer {
+    height: 20vh;
+    flex-direction: column;
+    font-size: var(--font-size-huge);
+
+    img {
+        width: var(--font-size-huge);
+        height: var(--font-size-huge);
+    }
+
+    a {
+        display: flex;
+        align-items: center;
+        color: var(--text-color-3);
+
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+}
+
+.img1 {
+    background-color: #181a3e;
+}
+
+.img2 {
+    background-color: #1f3b5c;
+}
+
+.img3 {
+    background-color: #0066b6;
+}
+
+.img4 {
+    background-color: #3d669d;
+}
+
+.img5 {
+    background-color: #fafbfd;
+    background-position: 0 0;
+    font-size: 5vmax;
+}
