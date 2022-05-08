@@ -92,13 +92,13 @@ export default defineComponent({
     const links: ComputedRef<DropdownOption[]> = computed(() => [
       {
         type: "route",
-        label: "首页",
+        label: t("appbar.homepage"),
         key: "/",
       },
       {
         type: "route",
-        label: "工具",
-        key: "/tool",
+        label: t("appbar.tools"),
+        key: "/tools",
       },
       {
         type: "divider",
@@ -106,12 +106,15 @@ export default defineComponent({
       },
       {
         type: "route",
-        label: "登录",
+        label: t("appbar.login"),
         key: "/login",
       },
       {
         type: "button",
-        label: theme.value === null ? "深色模式" : "浅色模式",
+        label:
+          theme.value === null
+            ? t("appbar.darkTheme")
+            : t("appbar.lightTheme"),
         key: "theme",
       },
       {

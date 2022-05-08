@@ -12,6 +12,8 @@
         "login": "登录",
         "developing": "开发中",
         "language": "语言",
+        "darkTheme":"深色模式",
+        "lightTheme": "浅色模式",
         "files": "文件存储",
         "nan4628": "宿舍卫生安排"
     },

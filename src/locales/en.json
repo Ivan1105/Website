@@ -12,6 +12,8 @@
         "login": "Login",
         "developing": "Developing",
         "language": "Lang",
+        "darkTheme": "Dark theme",
+        "lightTheme": "Light theme",
         "files": "Files Storage",
         "nan4628": "Dormitory"
     },
