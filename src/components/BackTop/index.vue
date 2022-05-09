@@ -28,7 +28,7 @@ export default defineComponent({
 
     function scrollToTop() {
       backTop.value?.classList.add("scrolling");
-      scrollTo(0, 150).then(() => {
+      scrollTo(0).then(() => {
         backTopCounter--;
         if (backTopCounter === 0) resetBackTopCounter();
       });

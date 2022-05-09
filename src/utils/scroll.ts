@@ -1,9 +1,8 @@
 /**
  * 使用动画滚动导航部分
  * @param end {Number} 滚动结束的位置
- * @param step {Number} 每一步滚动的长度
  */
-export const scrollTo = (end: number, step: number): Promise<void> => {
+export const scrollTo = (end: number): Promise<void> => {
     const el = document.documentElement;
     let start = el.scrollTop;
 
@@ -34,6 +33,7 @@ export const scrollTo = (end: number, step: number): Promise<void> => {
             }
             else resolve();
         }
+        const step = (start - end) / 30;
         _scrollTo(end, step)
     })
 };
