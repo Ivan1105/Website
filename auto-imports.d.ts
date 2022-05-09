@@ -6,6 +6,7 @@ declare global {
   const NDataTable: typeof import('naive-ui')['NDataTable']
   const NDropdown: typeof import('naive-ui')['NDropdown']
   const NEl: typeof import('naive-ui')['NEl']
+  const NGlobalStyle: typeof import('naive-ui')['NGlobalStyle']
   const NH1: typeof import('naive-ui')['NH1']
   const NIcon: typeof import('naive-ui')['NIcon']
   const NLoadingBarProvider: typeof import('naive-ui')['NLoadingBarProvider']

@@ -20,6 +20,8 @@
     text-shadow: -1px -1px 1px #aaa, 2px 2px 1px #363636;
     overflow: hidden;
     position: relative;
+    transition: filter 0.3s;
+    filter: brightness(var(--filter-brightness));
 }
 
 .title {

@@ -143,17 +143,23 @@ export default defineComponent({
       else if (targetTheme === "light") context.emit("update:theme", null);
       else {
         if (theme.value === null) {
-          window.sessionStorage.setItem("themeMode", "dark");
+          targetTheme = "dark";
           context.emit("update:theme", darkTheme);
         } else {
-          window.sessionStorage.setItem("themeMode", "light");
+          targetTheme = "light";
           context.emit("update:theme", null);
         }
       }
-      nextTick(() => {
-        document.querySelector("body")!.style.backgroundColor =
-          themeVars.value.bodyColor;
-      });
+      window.sessionStorage.setItem("themeMode", targetTheme);
+      setCssProperty(targetTheme);
+    }
+    /** 适配全局css变量 */
+    function setCssProperty(targetTheme: string) {
+      if (targetTheme === "dark") {
+        document.body.style.setProperty("--filter-brightness", "70%");
+      } else {
+        document.body.style.setProperty("--filter-brightness", "100%");
+      }
     }
     /** 自动切换主题 */
     function autoChangeTheme() {

@@ -3,6 +3,7 @@
     <n-loading-bar-provider>
       <Appbar v-model:theme="theme"></Appbar>
       <back-top />
+      <n-global-style />
       <router-view />
     </n-loading-bar-provider>
   </n-config-provider>
