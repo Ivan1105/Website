@@ -1,5 +1,5 @@
 <template>
-  <n-config-provider :theme="theme">
+  <n-config-provider :theme="theme" abstract inline-theme-disabled>
     <n-loading-bar-provider>
       <Appbar v-model:theme="theme"></Appbar>
       <back-top />

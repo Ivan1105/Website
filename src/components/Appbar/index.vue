@@ -60,13 +60,9 @@ import {
   computed,
   ComputedRef,
   onMounted,
+  watch,
 } from "@vue/runtime-core";
-import {
-  darkTheme,
-  DropdownOption,
-  useLoadingBar,
-  useThemeVars,
-} from "naive-ui";
+import { darkTheme, DropdownOption, useLoadingBar, useOsTheme } from "naive-ui";
 import { ChevronDownOutline, MenuOutline } from "@vicons/ionicons5";
 import { listLanguages, setLanguage } from "@/locales";
 import { useRouter } from "vue-router";
@@ -135,8 +131,6 @@ export default defineComponent({
     const loadingBar = useLoadingBar();
     window.loadingBar = loadingBar;
 
-    /** 主题变量 */
-    const themeVars = useThemeVars();
     /** 切换主题 */
     function changeTheme(targetTheme = "") {
       if (targetTheme === "dark") context.emit("update:theme", darkTheme);
@@ -149,8 +143,8 @@ export default defineComponent({
           targetTheme = "light";
           context.emit("update:theme", null);
         }
+        window.sessionStorage.setItem("themeMode", targetTheme);
       }
-      window.sessionStorage.setItem("themeMode", targetTheme);
       setCssProperty(targetTheme);
     }
     /** 适配全局css变量 */
@@ -161,19 +155,17 @@ export default defineComponent({
         document.body.style.setProperty("--filter-brightness", "100%");
       }
     }
+    const osTheme = useOsTheme();
     /** 自动切换主题 */
-    function autoChangeTheme() {
+    function autoChangeTheme(force = false) {
       const targetTheme = window.sessionStorage.getItem("themeMode");
-      if (targetTheme) changeTheme(targetTheme);
-      else if (window.matchMedia("(prefers-color-scheme:dark)").matches)
-        changeTheme("dark");
-      else if (window.matchMedia("(prefers-color-scheme:light)").matches)
-        changeTheme("light");
+      if (!force && targetTheme) changeTheme(targetTheme);
+      else changeTheme(osTheme.value as string);
     }
+    watch(osTheme, () => {
+      autoChangeTheme(true);
+    });
 
-    window
-      .matchMedia("(prefers-color-scheme:dark)")
-      .addEventListener("change", autoChangeTheme);
     onMounted(() => {
       autoChangeTheme();
     });

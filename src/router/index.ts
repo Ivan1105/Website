@@ -15,7 +15,7 @@ const routes: Array<RouteRecordRaw> = [
     children: [
       {
         path: '',
-        component: () => import('@/views/Tool.Home.vue')
+        component: () => import('@/views/Tools/Home/index.vue')
       },
       {
         path: 'gamerecord/:id?',
@@ -23,9 +23,20 @@ const routes: Array<RouteRecordRaw> = [
       },
       {
         path: 'deemo',
-        component: () => import('@/views/Tool.Deemo.vue')
+        meta: { title: 'Deemo练习记录' },
+        component: () => import('@/views/Tools/Deemo/Tool.Deemo.vue')
       }
     ]
+  },
+  {
+    path: '/404',
+    name: 'NotFound',
+    meta: { title: '404' },
+    component: () => import('@/views/Error/404.vue')
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    redirect: '/404'
   }
 ]
 
@@ -39,7 +50,10 @@ router.beforeEach(() => {
 })
 
 router.afterEach((to) => {
-  const title = to.matched[0].meta.title as string;
+  let title = ''
+  to.matched.forEach(({ meta }) => {
+    if (meta.title) title = meta.title as string;
+  })
   if (title) document.title = 'Ivan1105 - ' + title;
   else document.title = 'Ivan1105';
   window.loadingBar?.finish();
