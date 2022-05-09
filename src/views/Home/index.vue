@@ -1,6 +1,6 @@
 <template>
   <template v-for="(img, index) in imgs" :key="img">
-    <div :class="`img img${index} lazy`" :data-bg="img">
+    <div :class="`img img${index + 1} lazy`" :data-bg="img">
       <Effects v-if="index === 0"></Effects>
       <h2 v-if="index !== imgs.length - 1">
         {{ $t(`home.title${index + 1}`) }}

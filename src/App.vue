@@ -11,12 +11,10 @@
 <script lang="ts">
 import { defineComponent, Ref, ref } from "@vue/runtime-core";
 import { BuiltInGlobalTheme } from "naive-ui/lib/themes/interface";
-import BackTop from "@/components/BackTop/index.vue";
 
 const theme: Ref<null | BuiltInGlobalTheme> = ref(null);
 
 export default defineComponent({
-  components: { BackTop },
   setup() {
     return {
       theme,

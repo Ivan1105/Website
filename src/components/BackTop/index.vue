@@ -6,24 +6,37 @@
 
 <script lang="ts">
 import { defineComponent, onMounted, Ref, ref } from "@vue/runtime-core";
+import { scrollTo } from "@/utils";
 
 export default defineComponent({
   setup() {
     const backTop: Ref<null | HTMLElement> = ref(null);
+    let backTopCounter = 2;
     onMounted(() => {
       window.onscroll = function () {
         const scrollTop = document.querySelector("html")!.scrollTop;
         if (scrollTop > 180) backTop.value?.classList.add("show");
         else if (!backTop.value?.classList.contains("scrolling"))
           backTop.value?.classList.remove("show");
-        if (backTop.value?.offsetTop && backTop.value?.offsetTop < 0)
-          backTop.value?.classList.remove("scrolling", "show");
       };
+
+      backTop.value?.addEventListener("animationend", () => {
+        backTopCounter--;
+        if (backTopCounter === 0) resetBackTopCounter();
+      });
     });
 
     function scrollToTop() {
       backTop.value?.classList.add("scrolling");
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      scrollTo(0, 150).then(() => {
+        backTopCounter--;
+        if (backTopCounter === 0) resetBackTopCounter();
+      });
+    }
+
+    function resetBackTopCounter() {
+      backTopCounter = 2;
+      backTop.value?.classList.remove("show", "scrolling");
     }
 
     return {
