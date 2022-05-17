@@ -33,7 +33,7 @@ export const scrollTo = (end: number): Promise<void> => {
             }
             else resolve();
         }
-        const step = (start - end) / 30;
+        const step = Math.abs(start - end) / 30;
         _scrollTo(end, step)
     })
 };

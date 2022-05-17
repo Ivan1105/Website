@@ -18,6 +18,11 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import('@/views/Tools/Home/index.vue')
       },
       {
+        path: 'files',
+        meta: { title: '文件管理' },
+        component: () => import('@/views/Tools/Files/index.vue')
+      },
+      {
         path: 'gamerecord/:id?',
         component: () => import('@/views/Tool.GameRecord.vue')
       },
@@ -27,6 +32,12 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import('@/views/Tools/Deemo/Tool.Deemo.vue')
       }
     ]
+  },
+  {
+    path: '/login',
+    name: 'Login',
+    meta: { title: '登录 | 注册' },
+    component: () => import('@/views/Login/index.vue')
   },
   {
     path: '/404',

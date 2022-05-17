@@ -1,14 +1,23 @@
 body {
     margin: 0;
     transition: background-color 0.3s;
+    min-height: 100vh;
 }
 
 a {
     text-decoration: none;
     color: inherit;
+
+    &:hover{
+        text-decoration: underline;
+    }
 }
 
 h1,h2,h3,h4,h5,h6{
     font-size: inherit;
     margin: 0;
+}
+
+input::placeholder{
+    user-select: none;
 }

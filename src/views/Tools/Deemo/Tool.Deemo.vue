@@ -19,7 +19,7 @@ import {
   watch,
 } from "@vue/runtime-core";
 import { DataTableColumns, NInput, NSwitch } from "naive-ui";
-import axios from "@/axios";
+import axios from "@/utils/modules/axios";
 
 /** 每条数据的基本类型 */
 type Course = {
