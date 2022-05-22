@@ -70,47 +70,6 @@
                 margin-top: 20px;
             }
 
-            .input-item {
-                background-image: linear-gradient(to right, #e8198b, #0eb4dd);
-                width: 100%;
-                border-radius: 30px;
-                height: 50px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                box-sizing: border-box;
-                padding: 2px;
-
-                input {
-                    background-color: rgb(20, 20, 35); //rgb(41, 45, 62);
-                    border: none;
-                    flex: 1;
-                    max-width: 100%;
-                    min-width: 0;
-                    height: 100%;
-                    text-align: center;
-                    font-size: 16px;
-                    padding: 0 30px;
-                    outline: none;
-                    color: #fff;
-                    border-radius: 30px;
-
-                    &.left{
-                        border-top-right-radius: 0;
-                        border-bottom-right-radius: 0;
-                    }
-                }
-
-                .slot-right{
-                    background: transparent;
-                    border: none;
-                    color: #fff;
-                    cursor: pointer;
-                    height: 100%;
-                    border-radius: 0 30px 30px 0;
-                }
-            }
-
             .options-item {
                 padding: 0 1em;
                 display: flex;
@@ -142,6 +101,7 @@
                 justify-content: center;
                 user-select: none;
                 outline: none;
+                box-shadow: 0 4px 15px 0 rgba(49, 196, 190, 0.75);
 
                 &::before {
                     content: '';
