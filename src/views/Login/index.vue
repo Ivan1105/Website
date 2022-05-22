@@ -50,21 +50,25 @@
           class="item"
           placeholder="username"
           v-model="registerInfo.username"
+          :validator="registerValidators.username"
         />
         <ivan-input
           class="item"
           placeholder="password"
           v-model="registerInfo.password"
+          :validator="registerValidators.password"
         />
         <ivan-input
           class="item"
           placeholder="repeat password"
           v-model="registerInfo.repeat"
+          :validator="registerValidators.repeat"
         />
         <ivan-input
           class="item"
           placeholder="email"
           v-model="registerInfo.email"
+          :validator="registerValidators.email"
         >
           <template #right> 发送验证码 </template>
         </ivan-input>
@@ -109,13 +113,18 @@ let registerInfo = reactive({
   email: "",
   captcha: "",
 });
-/** 登录信息验证 */
-let loginValidators = computed(() => {
+/** 注册信息验证 */
+let registerValidators = computed(() => {
   return {
-    username: matchRule("username", loginInfo.username)
+    username: matchRule("username", registerInfo.username)
       ? ""
       : "用户名必须为长度4~20的字母和数字",
-    password: matchRule("password", loginInfo.password) ? "" : "密码必须为",
+    password: matchRule("password", registerInfo.password)
+      ? ""
+      : "密码必须为长度6~20的字母、数字和符号",
+    repeat:
+      registerInfo.password === registerInfo.repeat ? "" : "两次输入密码不一致",
+    email: matchRule("email", registerInfo.email) ? "" : "无法识别的邮箱格式",
   };
 });
 
@@ -161,7 +170,7 @@ export default defineComponent({
       registerForm,
       IvanInput,
       loginInfo,
-      loginValidators,
+      registerValidators,
       registerInfo,
     };
   },

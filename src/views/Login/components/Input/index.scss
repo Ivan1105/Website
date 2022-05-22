@@ -41,9 +41,13 @@
         line-height: 14px;
         margin-top: 2px;
         left: 1em;
+        right: 1em;
         color: var(--error-color);
         opacity: 0;
         transition: opacity 0.3s;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
 
         &.show {
             opacity: 1;
