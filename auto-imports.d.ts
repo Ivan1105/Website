@@ -20,6 +20,8 @@ declare global {
   const NRadioButton: typeof import('naive-ui')['NRadioButton']
   const NRadioGroup: typeof import('naive-ui')['NRadioGroup']
   const NText: typeof import('naive-ui')['NText']
+  const NThing: typeof import('naive-ui')['NThing']
+  const NTime: typeof import('naive-ui')['NTime']
   const NUpload: typeof import('naive-ui')['NUpload']
   const NUploadDragger: typeof import('naive-ui')['NUploadDragger']
 }

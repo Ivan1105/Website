@@ -1,0 +1,35 @@
+@import '@/assets/vars';
+
+.cards-container {
+    .card {
+        margin-top: 20px;
+        padding: 1em 2em;
+        border: 1px solid var(--border-color);
+
+        :deep(.n-thing-main__content) {
+            word-break: break-all;
+        }
+
+        :deep(.n-thing-header__extra) {
+            i {
+                vertical-align: middle;
+                cursor: pointer;
+                transition: color 0.3s;
+
+                &:hover {
+                    color: var(--primary-color-hover);
+                }
+            }
+        }
+
+        &:last-child {
+            margin-bottom: 5em;
+        }
+
+        @media (min-width: $screen-sm) {
+            width: 80%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+    }
+}

@@ -30,6 +30,11 @@ const routes: Array<RouteRecordRaw> = [
         path: 'deemo',
         meta: { title: 'Deemo练习记录' },
         component: () => import('@/views/Tools/Deemo/Tool.Deemo.vue')
+      },
+      {
+        path: 'timeline',
+        meta: { title: '动态' },
+        component: () => import('@/views/Tools/Timeline/index.vue')
       }
     ]
   },

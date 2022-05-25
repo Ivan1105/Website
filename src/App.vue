@@ -1,5 +1,11 @@
 <template>
-  <n-config-provider :theme="theme" abstract inline-theme-disabled>
+  <n-config-provider
+    :locale="zhCN"
+    :date-locale="dateZhCN"
+    :theme="theme"
+    abstract
+    inline-theme-disabled
+  >
     <n-message-provider placement="bottom">
       <n-loading-bar-provider>
         <Appbar v-model:theme="theme"></Appbar>
@@ -14,6 +20,7 @@
 <script lang="ts">
 import { defineComponent, Ref, ref } from "@vue/runtime-core";
 import { BuiltInGlobalTheme } from "naive-ui/lib/themes/interface";
+import { zhCN, dateZhCN } from "naive-ui";
 
 const theme: Ref<null | BuiltInGlobalTheme> = ref(null);
 
@@ -21,6 +28,8 @@ export default defineComponent({
   setup() {
     return {
       theme,
+      zhCN,
+      dateZhCN,
     };
   },
 });
