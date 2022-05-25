@@ -38,6 +38,12 @@ export const setLanguage = (lang = '') => {
     window.localStorage.setItem(LOCALE_KEY, lang)
 
     document.querySelector('html')?.setAttribute('lang', lang);
+    const changeEvent = new CustomEvent('languageChange', {
+        detail: {
+            lang
+        }
+    });
+    document.dispatchEvent(changeEvent);
     i18n.global.locale = lang
 }
 

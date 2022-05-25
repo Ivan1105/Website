@@ -1,7 +1,7 @@
 <template>
   <n-config-provider
-    :locale="zhCN"
-    :date-locale="dateZhCN"
+    :locale="locale"
+    :date-locale="dateLocale"
     :theme="theme"
     abstract
     inline-theme-disabled
@@ -20,16 +20,36 @@
 <script lang="ts">
 import { defineComponent, Ref, ref } from "@vue/runtime-core";
 import { BuiltInGlobalTheme } from "naive-ui/lib/themes/interface";
-import { zhCN, dateZhCN } from "naive-ui";
+import { zhCN, dateZhCN, enUS, dateEnUS } from "naive-ui";
+import i18n from "./locales";
 
 const theme: Ref<null | BuiltInGlobalTheme> = ref(null);
+
+/** 语言 */
+const locale = ref(zhCN);
+const dateLocale = ref(dateZhCN);
+const setLocale = (event: any) => {
+  let lang = "";
+  if (typeof event === "object") lang = event.detail.lang;
+  else lang = event;
+  
+  if (lang === "zh") {
+    locale.value = zhCN;
+    dateLocale.value = dateZhCN;
+  } else if (lang === "en") {
+    locale.value = enUS;
+    dateLocale.value = dateEnUS;
+  }
+};
+document.addEventListener("languageChange", setLocale);
+setLocale(i18n.global.locale);
 
 export default defineComponent({
   setup() {
     return {
       theme,
-      zhCN,
-      dateZhCN,
+      locale,
+      dateLocale,
     };
   },
 });
