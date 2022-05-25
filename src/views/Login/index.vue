@@ -20,15 +20,16 @@
           v-model="loginInfo.password"
           class="item"
           placeholder="password"
+          type="password"
         />
 
         <div class="item options-item">
-          <n-checkbox>保持登录</n-checkbox>
+          <n-checkbox v-model="keepLogin">保持登录</n-checkbox>
           <n-button text>忘记密码</n-button>
         </div>
       </div>
       <div class="form-actions">
-        <button class="form-action">登录</button>
+        <button class="form-action" @click="handleLogin">登录</button>
       </div>
       <div class="form-footer">
         <n-button text @click="switchTo('register')">注册一个新账号</n-button>
@@ -79,7 +80,7 @@
         />
       </div>
       <div class="form-actions">
-        <button class="form-action">注册</button>
+        <button class="form-action" @click="handleRegister">注册</button>
       </div>
       <div class="form-footer">
         <n-button text @click="switchTo('login')">返回登录</n-button>
@@ -89,10 +90,11 @@
 </template>
 
 <script lang="ts">
-import { matchRule } from "@/utils";
+import { matchRule, axios, verifyCaptcha } from "@/utils";
 import {
   computed,
   defineComponent,
+  onBeforeUnmount,
   onMounted,
   reactive,
   Ref,
@@ -100,11 +102,15 @@ import {
 } from "@vue/runtime-core";
 import IvanInput from "./components/Input/index.vue";
 
+let loginForm: Ref<null | HTMLFormElement> = ref(null);
+let registerForm: Ref<null | HTMLFormElement> = ref(null);
 /** 登录信息 */
 let loginInfo = reactive({
   username: "",
   password: "",
 });
+/** 保持登录 */
+let keepLogin = ref(false);
 /** 注册信息 */
 let registerInfo = reactive({
   username: "",
@@ -127,14 +133,45 @@ let registerValidators = computed(() => {
     email: matchRule("email", registerInfo.email) ? "" : "无法识别的邮箱格式",
   };
 });
+/** 点击登录按钮 */
+const handleLogin = function () {
+  verifyCaptcha("login")
+    .then((token) => {
+      return axios("/user/login", {
+        method: "post",
+        data: Object.assign(loginInfo, { captcha: token }),
+      });
+    })
+    .then((res) => {
+      localStorage.removeItem("authorization");
+      if (keepLogin.value === true)
+        localStorage.setItem("authorization", res.token);
+      else sessionStorage.setItem("authorization", res.token);
+      location.replace("/");
+    });
+};
+/** 点击注册按钮 */
+const handleRegister = function () {
+  let validates = true;
+  Object.values(registerValidators).forEach((v: string) => {
+    if (v !== "") validates = false;
+  });
+  if (!validates) return;
+};
 
 export default defineComponent({
   components: { IvanInput },
   setup() {
+    // 谷歌验证码显示
+    onMounted(()=>{
+      document.querySelector('.grecaptcha-badge')?.classList.add('show');
+    })
+    onBeforeUnmount(()=>{
+      document.querySelector('.grecaptcha-badge')?.classList.remove('show');
+    })
+
     let hideLogin = ref(false);
     let hideRegister = ref(true);
-    let loginForm: Ref<null | HTMLFormElement> = ref(null);
-    let registerForm: Ref<null | HTMLFormElement> = ref(null);
     /** 切换功能 */
     function switchTo(type: "login" | "register") {
       if (type === "login") {
@@ -172,6 +209,9 @@ export default defineComponent({
       loginInfo,
       registerValidators,
       registerInfo,
+      keepLogin,
+      handleLogin,
+      handleRegister,
     };
   },
 });

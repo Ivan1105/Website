@@ -15,6 +15,7 @@ declare global {
   const NH1: typeof import('naive-ui')['NH1']
   const NIcon: typeof import('naive-ui')['NIcon']
   const NLoadingBarProvider: typeof import('naive-ui')['NLoadingBarProvider']
+  const NMessageProvider: typeof import('naive-ui')['NMessageProvider']
   const NP: typeof import('naive-ui')['NP']
   const NRadioButton: typeof import('naive-ui')['NRadioButton']
   const NRadioGroup: typeof import('naive-ui')['NRadioGroup']

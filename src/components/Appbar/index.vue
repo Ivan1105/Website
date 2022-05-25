@@ -55,18 +55,21 @@
 <script lang="ts">
 import {
   defineComponent,
-  nextTick,
   toRefs,
   computed,
   ComputedRef,
   onMounted,
   watch,
+  ref,
+  Ref,
 } from "@vue/runtime-core";
 import { darkTheme, DropdownOption, useLoadingBar, useOsTheme } from "naive-ui";
 import { ChevronDownOutline, MenuOutline } from "@vicons/ionicons5";
 import { listLanguages, setLanguage } from "@/locales";
 import { useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
+import { useMessage } from "naive-ui";
+import { axios } from "@/utils";
 
 /** 系统支持的语言 */
 const languages = listLanguages();
@@ -85,6 +88,34 @@ export default defineComponent({
     const $router = useRouter();
     const { t } = useI18n();
 
+    /** 用户名 */
+    let username: Ref<null | string> = ref(null);
+    onMounted(() => {
+      axios(
+        "/user/getUser",
+        {
+          method: "get",
+        },
+        false
+      ).then((res) => {
+        username.value = res.username;
+      });
+    });
+    /** 登录状态 */
+    const loginStatus: ComputedRef<DropdownOption> = computed(() => {
+      if (username.value === null)
+        return {
+          type: "route",
+          label: t("appbar.login"),
+          key: "/login",
+        };
+      return {
+        type: "route",
+        label: username.value,
+        key: "/user",
+      };
+    });
+
     /** 导航栏链接 */
     const links: ComputedRef<DropdownOption[]> = computed(() => [
       {
@@ -101,11 +132,7 @@ export default defineComponent({
         type: "divider",
         key: "d1",
       },
-      {
-        type: "route",
-        label: t("appbar.login"),
-        key: "/login",
-      },
+      loginStatus.value,
       {
         type: "button",
         label:
@@ -130,6 +157,8 @@ export default defineComponent({
     /** 加载条 */
     const loadingBar = useLoadingBar();
     window.loadingBar = loadingBar;
+    /** 消息弹窗 */
+    window.message = useMessage();
 
     /** 切换主题 */
     function changeTheme(targetTheme = "") {
@@ -156,7 +185,10 @@ export default defineComponent({
       }
     }
     const osTheme = useOsTheme();
-    /** 自动切换主题 */
+    /**
+     * 自动切换主题
+     * @param force 强制切换
+     */
     function autoChangeTheme(force = false) {
       const targetTheme = window.sessionStorage.getItem("themeMode");
       if (!force && targetTheme) changeTheme(targetTheme);

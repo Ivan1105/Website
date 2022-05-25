@@ -1,10 +1,10 @@
 <template>
   <div class="input-item">
     <input
-      type="text"
       :value="modelValue"
       :placeholder="placeholder"
       @input="handleInput"
+      :type="type"
     />
     <button v-if="$slots.right" class="slot-right">
       <slot name="right"></slot>
@@ -32,6 +32,10 @@ export default defineComponent({
       default: "",
     },
     modelValue: String,
+    type: {
+      type: String,
+      default: "text",
+    },
   },
   emits: ["update:modelValue"],
   setup(props, context) {

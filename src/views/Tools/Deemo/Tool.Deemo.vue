@@ -133,14 +133,14 @@ const columns: DataTableColumns<Course> = [
         defaultValue: Boolean(row.fc),
         onUpdateValue: (v: boolean) => {
           row.fc = v;
-          axios
-            .post("/deemo/setNewFC", { id: row.id, fc: row.fc })
-            .then((res) => {
-              if (res.data.code !== 200) return Promise.reject();
-            })
-            .catch(() => {
-              row.fc = !row.fc;
-            });
+          // axios
+          //   .post("/deemo/setNewFC", { id: row.id, fc: row.fc })
+          //   .then((res) => {
+          //     if (res.data.code !== 200) return Promise.reject();
+          //   })
+          //   .catch(() => {
+          //     row.fc = !row.fc;
+          //   });
         },
       });
     },
@@ -153,17 +153,17 @@ const columns: DataTableColumns<Course> = [
         value: row.charming,
         onUpdateValue: (v) => {
           row.charming = Number(v);
-          axios
-            .post("/deemo/setNewCharming", {
-              id: row.id,
-              charming: row.charming,
-            })
-            .then((res) => {
-              if (res.data.code !== 200) return Promise.reject();
-            })
-            .catch(() => {
-              row.charming = 0;
-            });
+          // axios
+          //   .post("/deemo/setNewCharming", {
+          //     id: row.id,
+          //     charming: row.charming,
+          //   })
+          //   .then((res) => {
+          //     if (res.data.code !== 200) return Promise.reject();
+          //   })
+          //   .catch(() => {
+          //     row.charming = 0;
+          //   });
         },
       });
     },
@@ -176,17 +176,17 @@ const columns: DataTableColumns<Course> = [
         value: row.total,
         onUpdateValue: (v) => {
           row.total = Number(v);
-          axios
-            .post("/deemo/setNewTotal", {
-              id: row.id,
-              total: row.total,
-            })
-            .then((res) => {
-              if (res.data.code !== 200) return Promise.reject();
-            })
-            .catch(() => {
-              row.total = 0;
-            });
+          // axios
+          //   .post("/deemo/setNewTotal", {
+          //     id: row.id,
+          //     total: row.total,
+          //   })
+          //   .then((res) => {
+          //     if (res.data.code !== 200) return Promise.reject();
+          //   })
+          //   .catch(() => {
+          //     row.total = 0;
+          //   });
         },
       });
     },
@@ -259,12 +259,12 @@ export default defineComponent({
       { deep: true }
     );
 
-    onMounted(() => {
-      axios.get("/deemo/showAllInfo").then((res) => {
-        if (res.data.code !== 200) return Promise.reject();
-        data.value = res.data.data;
-      });
-    });
+    // onMounted(() => {
+    //   axios.get("/deemo/showAllInfo").then((res) => {
+    //     if (res.data.code !== 200) return Promise.reject();
+    //     data.value = res.data.data;
+    //   });
+    // });
 
     return {
       columns,

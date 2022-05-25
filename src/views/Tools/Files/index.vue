@@ -63,14 +63,14 @@ let data: Ref<TableFile[]> = ref([]);
 export default defineComponent({
   components: { ArchiveIcon },
   setup() {
-    onMounted(() => {
-      axios({
-        method: "get",
-        url: "/cloud/fileList",
-      }).then((res) => {
-        data.value = res.data.list;
-      });
-    });
+    // onMounted(() => {
+    //   axios({
+    //     method: "get",
+    //     url: "/cloud/fileList",
+    //   }).then((res) => {
+    //     data.value = res.data.list;
+    //   });
+    // });
     return {
       columns,
       data,
