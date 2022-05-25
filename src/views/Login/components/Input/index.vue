@@ -6,9 +6,14 @@
       @input="handleInput"
       :type="type"
     />
-    <button v-if="$slots.right" class="slot-right">
+    <div
+      role="button"
+      v-if="$slots.right"
+      class="slot-right"
+      @click="handleRightButtonClick"
+    >
       <slot name="right"></slot>
-    </button>
+    </div>
     <n-el
       tag="span"
       :class="{
@@ -37,7 +42,7 @@ export default defineComponent({
       default: "text",
     },
   },
-  emits: ["update:modelValue"],
+  emits: ["update:modelValue", "rightButtonClick"],
   setup(props, context) {
     /** 是否显示验证器 */
     let displayValidator = ref(false);
@@ -46,9 +51,15 @@ export default defineComponent({
       context.emit("update:modelValue", ev.target.value);
     }
 
+    /** 右边按钮触发点击 */
+    const handleRightButtonClick = function () {
+      context.emit("rightButtonClick");
+    };
+
     return {
       displayValidator,
       handleInput,
+      handleRightButtonClick,
     };
   },
 });

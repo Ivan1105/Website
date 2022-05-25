@@ -70,8 +70,11 @@
           placeholder="email"
           v-model="registerInfo.email"
           :validator="registerValidators.email"
+          @rightButtonClick="sendCaptcha"
         >
-          <template #right> 发送验证码 </template>
+          <template #right>
+            {{ captchaTimer &lt;= 0 ? "发送验证码" : captchaTimer + "s" }}
+          </template>
         </ivan-input>
         <ivan-input
           class="item"
@@ -119,6 +122,7 @@ let registerInfo = reactive({
   email: "",
   captcha: "",
 });
+
 /** 注册信息验证 */
 let registerValidators = computed(() => {
   return {
@@ -133,6 +137,7 @@ let registerValidators = computed(() => {
     email: matchRule("email", registerInfo.email) ? "" : "无法识别的邮箱格式",
   };
 });
+
 /** 点击登录按钮 */
 const handleLogin = function () {
   verifyCaptcha("login")
@@ -150,25 +155,66 @@ const handleLogin = function () {
       location.replace("/");
     });
 };
+
 /** 点击注册按钮 */
 const handleRegister = function () {
   let validates = true;
-  Object.values(registerValidators).forEach((v: string) => {
+  Object.values(registerValidators.value).forEach((v: string) => {
     if (v !== "") validates = false;
   });
+
   if (!validates) return;
+
+  axios("/user/register", {
+    method: "post",
+    data: registerInfo,
+  }).then(() => {
+    location.reload();
+  });
+};
+
+/** 验证码冷却时间 */
+const captchaTimer = ref(0);
+/** 发送验证码 */
+const sendCaptcha = function () {
+  if (registerValidators.value.email !== "") return;
+  if (captchaTimer.value > 0) return;
+
+  captchaTimer.value = 60;
+  const timer = setInterval(() => {
+    captchaTimer.value--;
+    if (captchaTimer.value <= 0) clearInterval(timer);
+  }, 1000);
+
+  verifyCaptcha("sendCaptcha")
+    .then((token) => {
+      return axios("/user/sendCaptcha", {
+        method: "post",
+        data: {
+          email: registerInfo.email,
+          captcha: token,
+        },
+      });
+    })
+    .then((res) => {
+      localStorage.setItem("authorization", res.token);
+    })
+    .catch(() => {
+      captchaTimer.value = 0;
+      clearInterval(timer);
+    });
 };
 
 export default defineComponent({
   components: { IvanInput },
   setup() {
     // 谷歌验证码显示
-    onMounted(()=>{
-      document.querySelector('.grecaptcha-badge')?.classList.add('show');
-    })
-    onBeforeUnmount(()=>{
-      document.querySelector('.grecaptcha-badge')?.classList.remove('show');
-    })
+    onMounted(() => {
+      document.querySelector(".grecaptcha-badge")?.classList.add("show");
+    });
+    onBeforeUnmount(() => {
+      document.querySelector(".grecaptcha-badge")?.classList.remove("show");
+    });
 
     let hideLogin = ref(false);
     let hideRegister = ref(true);
@@ -205,13 +251,14 @@ export default defineComponent({
       hideRegister,
       loginForm,
       registerForm,
-      IvanInput,
       loginInfo,
       registerValidators,
       registerInfo,
       keepLogin,
       handleLogin,
       handleRegister,
+      captchaTimer,
+      sendCaptcha,
     };
   },
 });
