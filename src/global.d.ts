@@ -1,4 +1,5 @@
 import { LoadingBarProviderInst } from 'naive-ui'
+import { DialogApiInjection } from 'naive-ui/lib/dialog/src/DialogProvider';
 import { MessageApiInjection } from 'naive-ui/lib/message/src/MessageProvider';
 
 // interface Window {
@@ -11,5 +12,6 @@ declare global {
         loadingBar?: LoadingBarProviderInst
         message?: MessageApiInjection;
         grecaptcha?: any;
+        dialog?: DialogApiInjection;
     }
 }

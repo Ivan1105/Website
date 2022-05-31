@@ -63,7 +63,13 @@ import {
   ref,
   Ref,
 } from "@vue/runtime-core";
-import { darkTheme, DropdownOption, useLoadingBar, useOsTheme } from "naive-ui";
+import {
+  darkTheme,
+  DropdownOption,
+  useDialog,
+  useLoadingBar,
+  useOsTheme,
+} from "naive-ui";
 import { ChevronDownOutline, MenuOutline } from "@vicons/ionicons5";
 import { listLanguages, setLanguage } from "@/locales";
 import { useRouter } from "vue-router";
@@ -159,6 +165,8 @@ export default defineComponent({
     window.loadingBar = loadingBar;
     /** 消息弹窗 */
     window.message = useMessage();
+    /** 对话框 */
+    window.dialog = useDialog();
 
     /** 切换主题 */
     function changeTheme(targetTheme = "") {

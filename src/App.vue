@@ -6,13 +6,15 @@
     abstract
     inline-theme-disabled
   >
-    <n-message-provider placement="bottom">
-      <n-loading-bar-provider>
-        <Appbar v-model:theme="theme"></Appbar>
-        <back-top />
-        <n-global-style />
-        <router-view />
-      </n-loading-bar-provider>
+    <n-message-provider placement="top">
+      <n-dialog-provider>
+        <n-loading-bar-provider>
+          <Appbar v-model:theme="theme"></Appbar>
+          <back-top />
+          <n-global-style />
+          <router-view />
+        </n-loading-bar-provider>
+      </n-dialog-provider>
     </n-message-provider>
   </n-config-provider>
 </template>
@@ -32,7 +34,7 @@ const setLocale = (event: any) => {
   let lang = "";
   if (typeof event === "object") lang = event.detail.lang;
   else lang = event;
-  
+
   if (lang === "zh") {
     locale.value = zhCN;
     dateLocale.value = dateZhCN;

@@ -24,7 +24,7 @@
         />
 
         <div class="item options-item">
-          <n-checkbox v-model="keepLogin">保持登录</n-checkbox>
+          <n-checkbox v-model:checked="keepLogin">保持登录</n-checkbox>
           <n-button text>忘记密码</n-button>
         </div>
       </div>
@@ -105,17 +105,17 @@ import {
 } from "@vue/runtime-core";
 import IvanInput from "./components/Input/index.vue";
 
-let loginForm: Ref<null | HTMLFormElement> = ref(null);
-let registerForm: Ref<null | HTMLFormElement> = ref(null);
+const loginForm: Ref<null | HTMLFormElement> = ref(null);
+const registerForm: Ref<null | HTMLFormElement> = ref(null);
 /** 登录信息 */
-let loginInfo = reactive({
+const loginInfo = reactive({
   username: "",
   password: "",
 });
 /** 保持登录 */
-let keepLogin = ref(false);
+const keepLogin = ref(false);
 /** 注册信息 */
-let registerInfo = reactive({
+const registerInfo = reactive({
   username: "",
   password: "",
   repeat: "",
