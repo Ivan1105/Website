@@ -32,7 +32,7 @@
         <n-time v-else :time="timeline.date" type="relative" />
       </template>
       <template #default>
-        {{ timeline.content.replace(/./g, "***") }}
+        {{ timeline.content }}
       </template>
       <template #header-extra>
         <n-button text @click="removeTimeline(timeline)">
