@@ -28,11 +28,6 @@ const toolsList: ToolCard[] = [
     description: ["可以暂时将文件存放在远程服务器上", "此功能还在不断完善中"],
     route: "/tools",
   },
-  {
-    title: "动态",
-    description: ["可以发布一些没人来看也没人看得到的动态（可能以后可以）"],
-    route: "/tools/timeline",
-  },
 ];
 
 export default defineComponent({

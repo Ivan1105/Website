@@ -31,10 +31,19 @@ const routes: Array<RouteRecordRaw> = [
         meta: { title: 'Deemo练习记录' },
         component: () => import('@/views/Tools/Deemo/Tool.Deemo.vue')
       },
+    ]
+  },
+  {
+    path: '/account',
+    name: 'Account',
+    meta: { title: '用户中心' },
+    component: () => import('@/views/Account/index.vue'),
+    children: [
       {
         path: 'timeline',
+        name:'Timeline',
         meta: { title: '动态' },
-        component: () => import('@/views/Tools/Timeline/index.vue')
+        component: () => import('@/views/Account/Timeline/index.vue')
       }
     ]
   },
@@ -45,14 +54,9 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/Login/index.vue')
   },
   {
-    path: '/404',
-    name: 'NotFound',
+    path: '/:pathMatch(.*)*',
     meta: { title: '404' },
     component: () => import('@/views/Error/404.vue')
-  },
-  {
-    path: '/:pathMatch(.*)*',
-    redirect: '/404'
   }
 ]
 

@@ -1,3 +1,5 @@
+@import './vars';
+
 body {
     margin: 0;
     transition: background-color 0.3s;
@@ -9,15 +11,24 @@ a {
     color: inherit;
 }
 
-h1,h2,h3,h4,h5,h6{
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
     font-size: inherit;
     margin: 0;
 }
 
-input::placeholder{
+input::placeholder {
     user-select: none;
 }
 
-.grecaptcha-badge:not(.show){
+.grecaptcha-badge:not(.show) {
     visibility: hidden;
+}
+
+.full-height{
+    min-height: calc(100vh - 1px - $appbar-height);
 }

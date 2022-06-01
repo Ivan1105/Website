@@ -118,7 +118,7 @@ export default defineComponent({
       return {
         type: "route",
         label: username.value,
-        key: "/user",
+        key: "/account/timeline",
       };
     });
 
