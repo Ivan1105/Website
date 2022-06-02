@@ -10,6 +10,7 @@
   "dependencies": {
     "axios": "^0.26.1",
     "core-js": "^3.6.5",
+    "cropperjs": "^1.5.12",
     "naive-ui": "^2.26.4",
     "vanilla-lazyload": "^17.8.1",
     "vfonts": "^0.0.3",

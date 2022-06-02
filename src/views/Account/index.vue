@@ -28,6 +28,11 @@ const sidebar: MenuOption[] = [
       ),
     key: "Timeline",
   },
+  {
+    label: () =>
+      h(RouterLink, { to: { name: "Settings" } }, { default: () => "设置" }),
+    key: "Settings",
+  },
 ];
 
 export default defineComponent({
