@@ -1,8 +1,10 @@
 @import '@/assets/vars';
 
 .cards-container {
+    width: 95%;
     padding-top: 20px;
     padding-bottom: 5em;
+    margin: auto;
 
     .card-add {
         border: 1px solid var(--border-color);
@@ -37,7 +39,5 @@
 
     @media (min-width: $screen-sm) {
         width: 80%;
-        margin-left: auto;
-        margin-right: auto;
     }
 }

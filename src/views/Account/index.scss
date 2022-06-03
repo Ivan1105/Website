@@ -1,0 +1,23 @@
+.account-container {
+    position: relative;
+
+    .links {
+        a {
+            display: block;
+            width: 100%;
+            line-height: 42px;
+            padding: 0 1em;
+            margin-top: 8px;
+            box-sizing: border-box;
+            transition: all 0.3s;
+
+            &:hover {
+                background-color: var(--hover-color);
+            }
+
+            &.router-link-active {
+                background-color: var(--primary-color-suppl);
+            }
+        }
+    }
+}

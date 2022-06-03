@@ -15,3 +15,8 @@ declare global {
         dialog?: DialogApiInjection;
     }
 }
+
+interface UserInfo {
+    username: string | null;
+    icon: string | null;
+}

@@ -60,9 +60,8 @@ import {
   ComputedRef,
   onMounted,
   watch,
-  ref,
-  Ref,
-} from "@vue/runtime-core";
+  inject,
+} from "vue";
 import {
   darkTheme,
   DropdownOption,
@@ -75,7 +74,7 @@ import { listLanguages, setLanguage } from "@/locales";
 import { useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 import { useMessage } from "naive-ui";
-import { axios } from "@/utils";
+import { UserInfo } from "@/global";
 
 /** 系统支持的语言 */
 const languages = listLanguages();
@@ -94,22 +93,11 @@ export default defineComponent({
     const $router = useRouter();
     const { t } = useI18n();
 
-    /** 用户名 */
-    let username: Ref<null | string> = ref(null);
-    onMounted(() => {
-      axios(
-        "/user/getUser",
-        {
-          method: "get",
-        },
-        false
-      ).then((res) => {
-        username.value = res.username;
-      });
-    });
+    /** 用户信息 */
+    const userInfo: UserInfo | undefined = inject("userInfo");
     /** 登录状态 */
     const loginStatus: ComputedRef<DropdownOption> = computed(() => {
-      if (username.value === null)
+      if (userInfo === undefined || userInfo.username === null)
         return {
           type: "route",
           label: t("appbar.login"),
@@ -117,8 +105,8 @@ export default defineComponent({
         };
       return {
         type: "route",
-        label: username.value,
-        key: "/account/timeline",
+        label: userInfo.username,
+        key: "/account",
       };
     });
 

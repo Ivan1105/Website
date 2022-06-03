@@ -1,5 +1,13 @@
+@import '@/assets/vars';
+
 .settings-container {
+    width: 95%;
+    margin: auto;
     padding: 40px 0;
+
+    @media (min-width:$screen-sm) {
+        width: 90%;
+    }
 
     .icon-container {
         position: relative;
@@ -9,6 +17,8 @@
         border-radius: 50%;
         overflow: hidden;
         cursor: pointer;
+        display: block;
+        margin: auto;
 
         .icon {
             width: 100%;
@@ -37,15 +47,14 @@
         }
     }
 
-
-    &>div {
-        text-align: center;
+    button {
+        width: 100%;
     }
 }
 
 .icon-adjust {
-    width: 600px;
-    max-width: 100%;
+    width: 400px;
+    max-width: 100vw;
 
     .icon-container {
         img {

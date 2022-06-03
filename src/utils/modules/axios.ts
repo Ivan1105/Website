@@ -27,7 +27,7 @@ const http = function (url: string, config?: AxiosRequestConfig<any>, showMessag
         }
 
         if (res.data.code !== 'C-000') {
-            if(showMessage) window.message?.error(res.data.msg)
+            if (showMessage) window.message?.error(res.data.msg)
             throw res.data.msg;
         }
         return res.data.context;

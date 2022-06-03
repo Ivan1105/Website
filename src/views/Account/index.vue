@@ -1,7 +1,12 @@
 <template>
   <div class="account-container full-height">
     <n-layout position="absolute" has-sider>
-      <n-layout-sider bordered>
+      <n-layout-sider
+        bordered
+        collapse-mode="transform"
+        :collapsed-width="0"
+        show-trigger
+      >
         <n-menu :options="sidebar" :value="$route.name"></n-menu>
       </n-layout-sider>
       <n-layout-content :native-scrollbar="false">
@@ -45,27 +50,5 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-.account-container {
-  position: relative;
-
-  .links {
-    a {
-      display: block;
-      width: 100%;
-      line-height: 42px;
-      padding: 0 1em;
-      margin-top: 8px;
-      box-sizing: border-box;
-      transition: all 0.3s;
-
-      &:hover {
-        background-color: var(--hover-color);
-      }
-
-      &.router-link-active {
-        background-color: var(--primary-color-suppl);
-      }
-    }
-  }
-}
+@import "./index";
 </style>

@@ -20,10 +20,18 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, Ref, ref } from "@vue/runtime-core";
+import {
+  defineComponent,
+  onMounted,
+  provide,
+  reactive,
+  Ref,
+  ref,
+} from "@vue/runtime-core";
 import { BuiltInGlobalTheme } from "naive-ui/lib/themes/interface";
 import { zhCN, dateZhCN, enUS, dateEnUS } from "naive-ui";
 import i18n from "./locales";
+import { axios } from "./utils";
 
 const theme: Ref<null | BuiltInGlobalTheme> = ref(null);
 
@@ -48,6 +56,25 @@ setLocale(i18n.global.locale);
 
 export default defineComponent({
   setup() {
+    /** 用户信息 */
+    const userInfo = reactive({
+      username: null as null | string,
+      icon: null as null | string,
+    });
+    provide("userInfo", userInfo);
+    onMounted(() => {
+      axios(
+        "/user/getUser",
+        {
+          method: "get",
+        },
+        false
+      ).then((res) => {
+        userInfo.username = res.username;
+        userInfo.icon = process.env.VUE_APP_API_URL + res.icon.substring(1);
+      });
+    });
+
     return {
       theme,
       locale,
