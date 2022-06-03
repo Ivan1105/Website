@@ -1,83 +1,82 @@
 <template>
-  <n-form
-    class="settings-container"
-    :model="setPassword"
-    :rules="passwordRules"
-  >
-    <n-grid cols="1 m:2" responsive="screen" x-gap="16" y-gap="20">
-      <n-grid-item span="2">
-        <span class="icon-container">
-          <img class="icon" :src="userInfo.icon" alt="icon" />
-          <div class="mask" @click="handleIconClick">更改头像</div>
-        </span>
-        <input
-          v-show="false"
-          ref="iconUploader"
-          type="file"
-          accept="image/png, image/jpeg"
-          @change="handleIconChange"
-        />
-        <n-modal v-model:show="showModal" :mask-closable="false">
-          <n-spin :show="uploadingIcon">
-            <n-card
-              class="icon-adjust"
-              title="调整头像"
-              closable
-              @close="handleCloseModal"
-            >
-              <template #default>
-                <div class="icon-container">
-                  <img ref="newIcon" :src="cropIcon" />
-                </div>
-              </template>
-              <template #action>
-                <n-space justify="end">
-                  <n-button @click="handleCloseModal">取消</n-button>
-                  <n-button @click="handleCropIcon" type="primary">
-                    确定
-                  </n-button>
-                </n-space>
-              </template>
-            </n-card>
-          </n-spin>
-        </n-modal>
-        <!-- <button @click="cropImage">click</button> -->
-      </n-grid-item>
-      <n-grid-item span="2">
-        <n-h3>个人资料</n-h3>
-      </n-grid-item>
-      <n-form-item-gi label="用户名">
-        <n-input disabled :value="userInfo.username" />
-      </n-form-item-gi>
-      <n-grid-item span="2">
-        <n-h3>修改密码</n-h3>
-      </n-grid-item>
-      <n-form-item-gi path="oldPassword" label="旧密码">
-        <n-input
-          v-model:value="setPassword.oldPassword"
-          type="password"
-          :input-props="{ autocomplete: 'current-password' }"
-        />
-      </n-form-item-gi>
-      <n-form-item-gi path="newPassword" label="新密码">
-        <n-input
-          v-model:value="setPassword.newPassword"
-          type="password"
-          :input-props="{ autocomplete: 'new-password' }"
-        />
-      </n-form-item-gi>
-      <n-form-item-gi path="repeat" label="重复密码">
-        <n-input
-          v-model:value="setPassword.repeat"
-          type="password"
-          :input-props="{ autocomplete: 'off' }"
-        />
-      </n-form-item-gi>
-      <n-grid-item span="2">
-        <n-button type="primary" @click="handleUpdatePassword">提交</n-button>
-      </n-grid-item>
-    </n-grid>
-  </n-form>
+  <div class="settings-container">
+    <div class="icon-container">
+      <img class="icon" :src="userInfo.icon" alt="icon" />
+      <div class="mask" @click="handleIconClick">更改头像</div>
+    </div>
+    <input
+      v-show="false"
+      ref="iconUploader"
+      type="file"
+      accept="image/png, image/jpeg"
+      @change="handleIconChange"
+    />
+    <n-modal v-model:show="showModal" :mask-closable="false">
+      <n-spin :show="uploadingIcon">
+        <n-card
+          class="icon-adjust"
+          title="调整头像"
+          closable
+          @close="handleCloseModal"
+        >
+          <template #default>
+            <div class="icon-container">
+              <img ref="newIcon" :src="cropIcon" />
+            </div>
+          </template>
+          <template #action>
+            <n-space justify="end">
+              <n-button @click="handleCloseModal">取消</n-button>
+              <n-button @click="handleCropIcon" type="primary"> 确定 </n-button>
+            </n-space>
+          </template>
+        </n-card>
+      </n-spin>
+    </n-modal>
+
+    <n-form>
+      <n-grid cols="1 m:2" responsive="screen" x-gap="16" y-gap="20">
+        <n-grid-item span="2">
+          <n-h3>个人资料</n-h3>
+        </n-grid-item>
+        <n-form-item-gi label="用户名">
+          <n-input disabled :value="userInfo.username" />
+        </n-form-item-gi>
+      </n-grid>
+    </n-form>
+
+    <n-form ref="passwordForm" :model="setPassword" :rules="passwordRules">
+      <n-grid cols="1 m:2" responsive="screen" x-gap="16" y-gap="20">
+        <n-grid-item span="2">
+          <n-h3>修改密码</n-h3>
+        </n-grid-item>
+        <n-form-item-gi path="oldPassword" label="旧密码">
+          <n-input
+            v-model:value="setPassword.oldPassword"
+            type="password"
+            :input-props="{ autocomplete: 'current-password' }"
+          />
+        </n-form-item-gi>
+        <n-form-item-gi path="newPassword" label="新密码">
+          <n-input
+            v-model:value="setPassword.newPassword"
+            type="password"
+            :input-props="{ autocomplete: 'new-password' }"
+          />
+        </n-form-item-gi>
+        <n-form-item-gi path="repeat" label="重复密码">
+          <n-input
+            v-model:value="setPassword.repeat"
+            type="password"
+            :input-props="{ autocomplete: 'off' }"
+          />
+        </n-form-item-gi>
+        <n-grid-item span="2">
+          <n-button type="primary" @click="handleUpdatePassword">提交</n-button>
+        </n-grid-item>
+      </n-grid>
+    </n-form>
+  </div>
 </template>
 
 <script lang="ts">
@@ -93,7 +92,7 @@ import {
 } from "@vue/runtime-core";
 import Cropper from "cropperjs";
 import "cropperjs/dist/cropper.css";
-import { FormRules } from "naive-ui";
+import { FormInst, FormRules } from "naive-ui";
 
 /** 待裁剪图像 */
 const cropIcon = ref("");
@@ -187,12 +186,16 @@ const passwordRules: FormRules = {
     },
   ],
 };
+const passwordForm: Ref<null | FormInst> = ref(null);
 const handleUpdatePassword = function () {
-  axios("/account/updatePassword", {
-    method: "post",
-    data: setPassword,
-  }).then(() => {
-    // location.href = "/login";
+  passwordForm.value?.validate((err) => {
+    if (err) return;
+    axios("/account/updatePassword", {
+      method: "post",
+      data: setPassword,
+    }).then(() => {
+      // location.href = "/login";
+    });
   });
 };
 
@@ -216,6 +219,7 @@ export default defineComponent({
 
       setPassword,
       passwordRules,
+      passwordForm,
       handleUpdatePassword,
     };
   },
