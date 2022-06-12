@@ -40,6 +40,12 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/Account/index.vue'),
     children: [
       {
+        path: '',
+        name: 'AccountHome',
+        meta: { title: '主页' },
+        component: () => import('@/views/Account/Home/index.vue')
+      },
+      {
         path: 'timeline',
         name: 'Timeline',
         meta: { title: '动态' },

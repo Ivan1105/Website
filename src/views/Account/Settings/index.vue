@@ -1,5 +1,5 @@
 <template>
-  <div class="settings-container">
+  <div class="router-container">
     <div class="icon-container">
       <img class="icon" :src="userInfo.icon" alt="icon" />
       <div class="mask" @click="handleIconClick">更改头像</div>

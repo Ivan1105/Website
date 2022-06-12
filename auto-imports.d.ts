@@ -8,6 +8,7 @@ declare global {
   const NConfigProvider: typeof import('naive-ui')['NConfigProvider']
   const NDataTable: typeof import('naive-ui')['NDataTable']
   const NDialogProvider: typeof import('naive-ui')['NDialogProvider']
+  const NDivider: typeof import('naive-ui')['NDivider']
   const NDropdown: typeof import('naive-ui')['NDropdown']
   const NEl: typeof import('naive-ui')['NEl']
   const NEmpty: typeof import('naive-ui')['NEmpty']

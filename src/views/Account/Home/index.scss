@@ -1,0 +1,25 @@
+.user-container {
+    .icon {
+        display: block;
+        margin: auto;
+        width: 180px;
+        height: 180px;
+        border-radius: 50%;
+    }
+
+    .follows {
+        margin-top: 1em;
+
+        .item {
+            text-align: center;
+
+            .header {
+                font-weight: bold;
+            }
+        }
+    }
+
+    .actions {
+        margin-top: 1em;
+    }
+}

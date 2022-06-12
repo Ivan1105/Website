@@ -26,6 +26,17 @@ const sidebar: MenuOption[] = [
     label: () =>
       h(
         RouterLink,
+        { to: { name: "AccountHome" } },
+        {
+          default: () => "主页",
+        }
+      ),
+    key: "AccountHome",
+  },
+  {
+    label: () =>
+      h(
+        RouterLink,
         {
           to: { name: "Timeline" },
         },
