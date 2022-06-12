@@ -35,13 +35,12 @@ const routes: Array<RouteRecordRaw> = [
   },
   {
     path: '/account',
-    name: 'Account',
     meta: { title: '用户中心' },
     component: () => import('@/views/Account/index.vue'),
     children: [
       {
-        path: '',
-        name: 'AccountHome',
+        path: ':uid?',
+        name: 'Account',
         meta: { title: '主页' },
         component: () => import('@/views/Account/Home/index.vue')
       },

@@ -35,7 +35,7 @@
       <template #default>
         {{ timeline.content }}
       </template>
-      
+
       <template v-if="editable" #header-extra>
         <n-button text @click="removeTimeline(timeline)">
           <template #icon>
@@ -65,14 +65,6 @@ interface Timeline {
 
 /** 动态列表 */
 const timelines: Ref<Timeline[]> = ref([]);
-axios("/timeline/list", {
-  method: "get",
-}).then((res: Timeline[]) => {
-  res.forEach((v) => {
-    v.date = new Date(v.date);
-  });
-  timelines.value = res;
-});
 
 /** 新增的动态内容 */
 const newTimeline = ref("");
@@ -125,8 +117,19 @@ export default defineComponent({
   props: {
     /** 能否编辑 */
     editable: Boolean,
+    /** 看谁的动态 */
+    uid: String,
   },
-  setup() {
+  setup(props) {
+    axios(`/timeline/list${props.uid ? "/" + props.uid : ""}`, {
+      method: "get",
+    }).then((res: Timeline[]) => {
+      res.forEach((v) => {
+        v.date = new Date(v.date);
+      });
+      timelines.value = res;
+    });
+
     return {
       timelines,
       newTimeline,

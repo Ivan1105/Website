@@ -46,7 +46,7 @@
     <n-divider />
 
     <n-h3>TA的动态</n-h3>
-    <Timeline></Timeline>
+    <Timeline :uid="uid"></Timeline>
   </div>
 </template>
 
@@ -54,11 +54,16 @@
 import { defineComponent } from "@vue/runtime-core";
 import { HeartOutline, MailOutline } from "@vicons/ionicons5";
 import Timeline from "../components/Timeline/index.vue";
+import { useRoute } from "vue-router";
 
 export default defineComponent({
   components: { HeartOutline, MailOutline, Timeline },
   setup() {
-    return {};
+    const $route = useRoute();
+    const uid = $route.params.uid;
+    return {
+      uid
+    };
   },
 });
 </script>
