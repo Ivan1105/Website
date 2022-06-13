@@ -31,7 +31,7 @@ import {
 import { BuiltInGlobalTheme } from "naive-ui/lib/themes/interface";
 import { zhCN, dateZhCN, enUS, dateEnUS } from "naive-ui";
 import i18n from "./locales";
-import { axios } from "./utils";
+import { axios, path } from "./utils";
 
 const theme: Ref<null | BuiltInGlobalTheme> = ref(null);
 
@@ -71,7 +71,7 @@ export default defineComponent({
         false
       ).then((res) => {
         userInfo.username = res.username;
-        userInfo.icon = process.env.VUE_APP_API_URL + res.icon.substring(1);
+        userInfo.icon = path.icon(res.icon);
       });
     });
 

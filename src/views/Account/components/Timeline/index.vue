@@ -54,7 +54,7 @@
 <script lang="ts">
 import { axios } from "@/utils";
 import { TrashSharp } from "@vicons/ionicons5";
-import { defineComponent, Ref, ref } from "@vue/runtime-core";
+import { defineComponent, Ref, ref, watch } from "@vue/runtime-core";
 
 interface Timeline {
   id: number;
@@ -112,6 +112,19 @@ const removeTimeline = function (tar: Timeline) {
   });
 };
 
+/** 获取对应用户的动态 */
+const getTimelineList = function (uid?: string) {
+  if (!uid) uid = "";
+  axios(`/timeline/list/${uid}`, {
+    method: "get",
+  }).then((res: Timeline[]) => {
+    res.forEach((v) => {
+      v.date = new Date(v.date);
+    });
+    timelines.value = res;
+  });
+};
+
 export default defineComponent({
   components: { TrashSharp },
   props: {
@@ -121,14 +134,13 @@ export default defineComponent({
     uid: String,
   },
   setup(props) {
-    axios(`/timeline/list${props.uid ? "/" + props.uid : ""}`, {
-      method: "get",
-    }).then((res: Timeline[]) => {
-      res.forEach((v) => {
-        v.date = new Date(v.date);
-      });
-      timelines.value = res;
-    });
+    watch(
+      () => props.uid,
+      (newVal) => {
+        getTimelineList(newVal);
+      }
+    );
+    getTimelineList(props.uid);
 
     return {
       timelines,
