@@ -1,11 +1,5 @@
 <template>
-  <n-config-provider
-    :locale="locale"
-    :date-locale="dateLocale"
-    :theme="theme"
-    abstract
-    inline-theme-disabled
-  >
+  <n-config-provider :locale="locale" :date-locale="dateLocale" :theme="theme" abstract inline-theme-disabled>
     <n-message-provider placement="top">
       <n-dialog-provider>
         <n-loading-bar-provider>
@@ -19,7 +13,7 @@
   </n-config-provider>
 </template>
 
-<script lang="ts">
+<script lang="ts" setup>
 import {
   defineComponent,
   onMounted,
@@ -31,7 +25,7 @@ import {
 import { BuiltInGlobalTheme } from "naive-ui/lib/themes/interface";
 import { zhCN, dateZhCN, enUS, dateEnUS } from "naive-ui";
 import i18n from "./locales";
-import { axios, path } from "./utils";
+import { getUser } from "./api/modules/user";
 
 const theme: Ref<null | BuiltInGlobalTheme> = ref(null);
 
@@ -54,32 +48,14 @@ const setLocale = (event: any) => {
 document.addEventListener("languageChange", setLocale);
 setLocale(i18n.global.locale);
 
-export default defineComponent({
-  setup() {
-    /** 用户信息 */
-    const userInfo = reactive({
-      username: null as null | string,
-      icon: null as null | string,
-    });
-    provide("userInfo", userInfo);
-    onMounted(() => {
-      axios(
-        "/user/getUser",
-        {
-          method: "get",
-        },
-        false
-      ).then((res) => {
-        userInfo.username = res.username;
-        userInfo.icon = path.icon(res.icon);
-      });
-    });
-
-    return {
-      theme,
-      locale,
-      dateLocale,
-    };
-  },
+/** 用户信息 */
+const userInfo = reactive({
+  username: null as null | string,
+  icon: null as null | string,
+});
+provide("userInfo", userInfo);
+getUser().then((res) => {
+  userInfo.username = res.username;
+  userInfo.icon = res.icon;
 });
 </script>

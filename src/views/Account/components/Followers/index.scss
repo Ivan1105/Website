@@ -1,0 +1,33 @@
+.follower {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    padding: 0.3em 1.5em;
+    transition: background-color 0.3s;
+
+    &:hover {
+        background-color: var(--hover-color);
+    }
+
+    .header {
+        display: flex;
+        align-items: center;
+
+        .icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+        }
+
+        .username {
+            margin-left: 1em;
+            font-size: 18px;
+            font-weight: bold;
+        }
+    }
+}
+
+.n-empty{
+    margin-top: 1em;
+}

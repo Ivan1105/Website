@@ -1,0 +1,9 @@
+.follow-type {
+    :deep(.n-tabs-tab) {
+        padding: 0;
+    }
+
+    a {
+        padding: var(--n-tab-padding);
+    }
+}

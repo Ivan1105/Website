@@ -2,28 +2,27 @@
   <div class="router-container">
     <div class="user-container">
       <img class="icon" :src="userDetail.icon" />
+      <n-h2 class="username">{{ userDetail.username }}</n-h2>
       <div class="follows">
         <n-space justify="center">
-          <div class="item">
+          <router-link :to="{ name: 'Followers' }" class="item">
             <div class="header">关注</div>
             <div>{{ userDetail.follows }}</div>
-          </div>
-          <div class="item">
+          </router-link>
+          <router-link :to="{ name: 'Following' }" class="item">
             <div class="header">粉丝</div>
             <div>{{ userDetail.fans }}</div>
-          </div>
+          </router-link>
           <div class="item">
             <div class="header">动态</div>
             <div>0</div>
           </div>
         </n-space>
       </div>
-      <nav v-show="$route.params.uid" class="actions">
+
+      <nav v-show="uid" class="actions">
         <n-space justify="center">
-          <n-button
-            v-if="!userDetail.following"
-            @click="handleActionsClick('follow')"
-          >
+          <n-button v-if="!userDetail.following" @click="handleActionsClick('follow')">
             <template #icon>
               <n-icon>
                 <heart-outline></heart-outline>
@@ -58,75 +57,57 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, Ref, ref, watch } from "@vue/runtime-core";
+<script lang="ts" setup>
+import { Ref, ref, watch } from "@vue/runtime-core";
 import { Heart, HeartOutline, MailOutline } from "@vicons/ionicons5";
 import Timeline from "../components/Timeline/index.vue";
 import { useRoute, useRouter } from "vue-router";
-import { axios, path } from "@/utils";
+import { account } from '@/api';
 
-interface UserDetail {
-  username?: string;
-  icon?: string;
-  follows?: number;
-  fans?: number;
-  following?: boolean;
-}
 /** 用户信息 */
-const userDetail: Ref<UserDetail> = ref({});
-const uid: Ref<string | string[] | undefined> = ref(undefined);
+const userDetail: Ref<account.UserDetail> = ref({
+  fans: 0,
+  following: false,
+  follows: 0,
+  icon: '',
+  username: '',
+});
+const uid: Ref<string | undefined> = ref(undefined);
 
 /** 触发动作按钮 */
 const handleActionsClick = function (action: "follow" | "unfollow") {
-  axios("/account/operateOthers", {
-    method: "post",
-    data: {
-      uid: uid.value,
-      action,
-    },
-  }).then(() => {
-    if(action==="follow") userDetail.value.following = true;
-    else if(action==="unfollow") userDetail.value.following = false;
+  if (!uid.value) return;
+  account.operateOthers(action, uid.value).then(() => {
+    if (action === "follow") userDetail.value.following = true;
+    else if (action === "unfollow") userDetail.value.following = false;
   });
 };
 
-export default defineComponent({
-  components: { Heart, HeartOutline, MailOutline, Timeline },
-  setup() {
-    const $route = useRoute();
-    const $router = useRouter();
+const route = useRoute();
+const router = useRouter();
 
-    /** 获取用户信息 */
-    const getUserDetail = function (uid?: string | string[]) {
-      if (!uid) uid = "";
-      axios(`/account/getUserDetail/${uid}`)
-        .then((res: UserDetail) => {
-          res.icon = path.icon(res.icon!);
-          userDetail.value = res;
-        })
-        .catch(() => {
-          $router.replace({ name: "Account" });
-        });
-    };
+/** 获取用户信息 */
+const getUserDetail = function (uid?: string) {
+  account.getUserDetail(uid)
+    .then((res: account.UserDetail) => {
+      userDetail.value = res;
+    })
+    .catch(() => {
+      router.replace("/404");
+    });
+};
 
-    uid.value = $route.params.uid;
-    watch(
-      () => $route.params.uid,
-      (newVal) => {
-        uid.value = newVal;
-        getUserDetail(newVal);
-      }
-    );
+uid.value = String(route.params.uid || '');
+watch(
+  () => route.params.uid,
+  (newVal) => {
+    if (route.name !== 'Account' && route.name !== 'AccountId') return;
+    if (newVal) uid.value = String(newVal);
+    else uid.value = '';
     getUserDetail(uid.value);
-
-    return {
-      uid,
-      userDetail,
-      $route,
-      handleActionsClick,
-    };
-  },
-});
+  }
+);
+getUserDetail(uid.value);
 </script>
 
 <style lang="scss" scoped>

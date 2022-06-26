@@ -43,12 +43,24 @@ const routes: Array<RouteRecordRaw> = [
         name: 'Account',
         meta: { title: "主页" },
         component: () => import('@/views/Account/Home/index.vue')
-      }
-      ,
+      },
       {
         path: ':uid',
+        name: 'AccountId',
         meta: { title: '主页' },
         component: () => import('@/views/Account/Home/index.vue')
+      },
+      {
+        path: 'following',
+        name: 'Following',
+        meta: { title: '我的关注' },
+        component: () => import('@/views/Account/Follow/index.vue')
+      },
+      {
+        path: 'followers',
+        name: 'Followers',
+        meta: { title: '谁关注我' },
+        component: () => import('@/views/Account/Follow/index.vue')
       },
       {
         path: 'timeline',
@@ -72,6 +84,7 @@ const routes: Array<RouteRecordRaw> = [
   },
   {
     path: '/:pathMatch(.*)*',
+    name: 'NotFound',
     meta: { title: '404' },
     component: () => import('@/views/Error/404.vue')
   }
