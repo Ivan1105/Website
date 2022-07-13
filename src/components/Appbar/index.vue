@@ -5,13 +5,7 @@
         <img src="/favicon.ico" alt="" />
         <span>Ivan1105</span>
       </a>
-      <n-dropdown
-        trigger="click"
-        placement="bottom-end"
-        show-arrow
-        :options="links"
-        @select="handleLinksSelect"
-      >
+      <n-dropdown trigger="click" placement="bottom-end" show-arrow :options="links" @select="handleLinksSelect">
         <n-button text>
           <n-icon>
             <menu-outline></menu-outline>
@@ -25,21 +19,11 @@
         <router-link v-if="link.type === 'route'" :to="link.key">
           {{ link.label }}
         </router-link>
-        <n-button
-          v-else-if="link.type === 'button'"
-          text
-          @click="handleLinksSelect(link.key, link)"
-        >
+        <n-button v-else-if="link.type === 'button'" text @click="handleLinksSelect(String(link.key), link)">
           {{ link.label }}
         </n-button>
         <div v-else-if="link.type === 'divider'" class="divider"></div>
-        <n-dropdown
-          v-else
-          trigger="hover"
-          show-arrow
-          :options="link.children"
-          @select="handleLinksSelect"
-        >
+        <n-dropdown v-else trigger="hover" show-arrow :options="link.children" @select="handleLinksSelect">
           <n-button class="dropdown-menu" text>
             {{ link.label }}
             <n-icon>
@@ -74,7 +58,7 @@ import { listLanguages, setLanguage } from "@/locales";
 import { useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 import { useMessage } from "naive-ui";
-import { UserInfo } from "@/global";
+import { injection } from "@/utils";
 
 /** 系统支持的语言 */
 const languages = listLanguages();
@@ -94,7 +78,7 @@ export default defineComponent({
     const { t } = useI18n();
 
     /** 用户信息 */
-    const userInfo: UserInfo | undefined = inject("userInfo");
+    const userInfo = inject(injection.userInfoKey);
     /** 登录状态 */
     const loginStatus: ComputedRef<DropdownOption> = computed(() => {
       if (userInfo === undefined || userInfo.username === null)

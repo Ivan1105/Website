@@ -2,11 +2,6 @@ import { LoadingBarProviderInst } from 'naive-ui'
 import { DialogApiInjection } from 'naive-ui/lib/dialog/src/DialogProvider';
 import { MessageApiInjection } from 'naive-ui/lib/message/src/MessageProvider';
 
-// interface Window {
-//     loadingBar?: LoadingBarProviderInst;
-//     message?: MessageApiInjection;
-// }
-
 declare global {
     interface Window {
         loadingBar?: LoadingBarProviderInst
@@ -14,9 +9,9 @@ declare global {
         grecaptcha?: any;
         dialog?: DialogApiInjection;
     }
-}
-
-interface UserInfo {
-    username: string | null;
-    icon: string | null;
+    declare interface UserInfo {
+        uid: number;
+        username: string | null;
+        icon: string | null;
+    }
 }

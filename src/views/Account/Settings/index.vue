@@ -1,24 +1,13 @@
 <template>
   <div class="router-container">
     <div class="icon-container">
-      <img class="icon" :src="userInfo.icon" alt="icon" />
+      <img class="icon" :src="userInfo.icon!" alt="icon" />
       <div class="mask" @click="handleIconClick">更改头像</div>
     </div>
-    <input
-      v-show="false"
-      ref="iconUploader"
-      type="file"
-      accept="image/png, image/jpeg"
-      @change="handleIconChange"
-    />
+    <input v-show="false" ref="iconUploader" type="file" accept="image/png, image/jpeg" @change="handleIconChange" />
     <n-modal v-model:show="showModal" :mask-closable="false">
       <n-spin :show="uploadingIcon">
-        <n-card
-          class="icon-adjust"
-          title="调整头像"
-          closable
-          @close="handleCloseModal"
-        >
+        <n-card class="icon-adjust" title="调整头像" closable @close="handleCloseModal">
           <template #default>
             <div class="icon-container">
               <img ref="newIcon" :src="cropIcon" />
@@ -51,25 +40,15 @@
           <n-h3>修改密码</n-h3>
         </n-grid-item>
         <n-form-item-gi path="oldPassword" label="旧密码">
-          <n-input
-            v-model:value="setPassword.oldPassword"
-            type="password"
-            :input-props="{ autocomplete: 'current-password' }"
-          />
+          <n-input v-model:value="setPassword.oldPassword" type="password"
+            :input-props="{ autocomplete: 'current-password' }" />
         </n-form-item-gi>
         <n-form-item-gi path="newPassword" label="新密码">
-          <n-input
-            v-model:value="setPassword.newPassword"
-            type="password"
-            :input-props="{ autocomplete: 'new-password' }"
-          />
+          <n-input v-model:value="setPassword.newPassword" type="password"
+            :input-props="{ autocomplete: 'new-password' }" />
         </n-form-item-gi>
         <n-form-item-gi path="repeat" label="重复密码">
-          <n-input
-            v-model:value="setPassword.repeat"
-            type="password"
-            :input-props="{ autocomplete: 'off' }"
-          />
+          <n-input v-model:value="setPassword.repeat" type="password" :input-props="{ autocomplete: 'off' }" />
         </n-form-item-gi>
         <n-grid-item span="2">
           <n-button type="primary" @click="handleUpdatePassword">提交</n-button>
@@ -80,8 +59,7 @@
 </template>
 
 <script lang="ts">
-import { UserInfo } from "@/global";
-import { axios, matchRule } from "@/utils";
+import { axios, injection, matchRule } from "@/utils";
 import {
   defineComponent,
   inject,
@@ -202,7 +180,7 @@ const handleUpdatePassword = function () {
 export default defineComponent({
   setup() {
     /** 用户信息 */
-    const userInfo: UserInfo | undefined = inject("userInfo");
+    const userInfo = inject(injection.userInfoKey)!;
 
     return {
       newIcon,

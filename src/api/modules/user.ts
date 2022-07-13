@@ -1,10 +1,5 @@
 import { axios, path } from "@/utils"
 
-export interface userInfo {
-    username: string;
-    icon: string;
-}
-
 /**
  * 获取用户信息
  * @returns 
@@ -16,8 +11,8 @@ export const getUser = function () {
             method: "get",
         },
         false
-    ).then((res: userInfo) => {
-        res.icon = path.icon(res.icon);
+    ).then((res: UserInfo) => {
+        res.icon = path.icon(res.icon!);
         return res;
     })
 }

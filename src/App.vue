@@ -15,8 +15,6 @@
 
 <script lang="ts" setup>
 import {
-  defineComponent,
-  onMounted,
   provide,
   reactive,
   Ref,
@@ -26,6 +24,7 @@ import { BuiltInGlobalTheme } from "naive-ui/lib/themes/interface";
 import { zhCN, dateZhCN, enUS, dateEnUS } from "naive-ui";
 import i18n from "./locales";
 import { getUser } from "./api/modules/user";
+import { injection } from './utils'
 
 const theme: Ref<null | BuiltInGlobalTheme> = ref(null);
 
@@ -49,11 +48,11 @@ document.addEventListener("languageChange", setLocale);
 setLocale(i18n.global.locale);
 
 /** 用户信息 */
-const userInfo = reactive({
-  username: null as null | string,
-  icon: null as null | string,
+const userInfo: UserInfo = reactive({
+  username: null,
+  icon: null,
 });
-provide("userInfo", userInfo);
+provide(injection.userInfoKey, userInfo);
 getUser().then((res) => {
   userInfo.username = res.username;
   userInfo.icon = res.icon;
