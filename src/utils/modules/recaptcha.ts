@@ -5,6 +5,7 @@
  */
 export function verifyCaptcha(action: string): Promise<string> {
     return new Promise((resolve, reject) => {
+        // return resolve('');
         window.grecaptcha.ready(() => {
             window.grecaptcha.execute("6Lfg6WYdAAAAAMk1y5z1RzEmtUzpvyX5LCUbMYJg", {
                 action: action,

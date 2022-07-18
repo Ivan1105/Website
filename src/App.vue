@@ -49,11 +49,13 @@ setLocale(i18n.global.locale);
 
 /** 用户信息 */
 const userInfo: UserInfo = reactive({
+  uid: null,
   username: null,
   icon: null,
 });
 provide(injection.userInfoKey, userInfo);
 getUser().then((res) => {
+  userInfo.uid = res.uid;
   userInfo.username = res.username;
   userInfo.icon = res.icon;
 });

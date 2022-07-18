@@ -112,42 +112,90 @@
 }
 
 .playing {
-    position: relative;
     display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding: 2em 0;
-    box-sizing: border-box;
-    align-items: center;
+    gap: 2em;
 
     .state-container {
-        position: absolute;
-        top: 0;
-        left: 0;
-        height: 100%;
         display: flex;
         flex-direction: column;
         justify-content: center;
         padding: 0 1em;
         border-right: 1px solid var(--border-color);
+        transition: all 0.3s;
 
         h3 {
             text-align: center;
         }
     }
 
-    .items-container {
-        position: absolute;
-        padding-right: 1em;
-        top: 0;
-        right: 0;
-        height: 100%;
-        padding: 1em;
-        box-sizing: border-box;
-        border-left: 1px solid var(--border-color);
+    .main-container {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        align-items: center;
+        gap: 2em;
 
-        button {
-            display: block;
+        .card-container,
+        .item-container {
+            font-size: 24px;
+
+            span:not(:first-of-type) {
+                padding-left: 1em;
+            }
+        }
+
+        .log-container {
+            flex: 1;
+            font-size: 22px;
+            overflow: hidden;
+            text-align: center;
+
+            p:first-child {
+                margin-top: 0;
+            }
+        }
+
+        .card-container {
+            position: relative;
+            overflow: hidden;
+
+            @keyframes show-card {
+                from {
+                    left: 100%;
+                }
+
+                to {
+                    left: 0;
+                }
+            }
+
+            .card {
+                position: relative;
+                animation: show-card 1s ease-out 1;
+            }
+        }
+    }
+
+    .items-container {
+        padding: 1em;
+        border-left: 1px solid var(--border-color);
+        overflow-x: hidden;
+        transition: all 0.3s;
+
+        .item {
+            position: relative;
+
+            @keyframes show-item {
+                from {
+                    left: 100%;
+                }
+
+                to {
+                    left: 0;
+                }
+            }
+
+            animation: show-item 1s ease-out 1;
 
             &:not(:first-of-type) {
                 margin-top: 0.5em;
@@ -158,13 +206,11 @@
             text-align: center;
         }
     }
+}
 
-    .card-container,
-    .item-container {
-        font-size: 24px;
-
-        span:not(:first-of-type) {
-            padding-left: 1em;
-        }
-    }
+.closed,
+.error {
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }

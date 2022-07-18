@@ -30,5 +30,5 @@ input::placeholder {
 }
 
 .full-height{
-    min-height: calc(100vh - 1px - $appbar-height);
+    height: calc(100vh - 1px - $appbar-height);
 }

@@ -9,8 +9,8 @@ declare global {
         grecaptcha?: any;
         dialog?: DialogApiInjection;
     }
-    declare interface UserInfo {
-        uid: number;
+    interface UserInfo {
+        uid: number | null;
         username: string | null;
         icon: string | null;
     }

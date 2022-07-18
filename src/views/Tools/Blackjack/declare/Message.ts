@@ -16,6 +16,8 @@ export interface PlayerInfo {
     itemCards?: ItemInfo[];
     items: ItemInfo[];
     hp: number;
+    atk: number;
+    def: number;
 }
 
 /** 所有信息 */
@@ -25,8 +27,15 @@ export interface AllInfo {
 }
 
 namespace MessageNamespace {
+    interface Ready {
+        key: 'ready';
+        opponentInfo: {
+            pid: PID;
+        }
+        gameInfo: AllInfo;
+    }
     interface DrawNumber {
-        key: 'drawNumber';
+        key: 'drawNumber' | 'withdrawNumber';
         pid: PID;
         card: NumberInfo;
     }
@@ -35,26 +44,24 @@ namespace MessageNamespace {
         pid: PID;
         card?: ItemInfo;
     }
-    interface HPChange {
-        key: 'hpChange';
+    interface ValueChange {
+        key: 'hpChange' | 'atkChange' | 'defChange';
         pid: PID;
-        currentHP: number;
+        currentValue: number;
+    }
+    interface TargetChange {
+        key: 'targetChange';
+        currentValue: number;
     }
     interface UseItem {
         key: 'useItem';
         pid: PID;
         card: ItemInfo;
     }
-    interface Ready {
-        key: 'ready';
-        opponentInfo: {
-            pid: PID;
-        }
-        gameInfo: AllInfo;
-    }
     interface RoundEnd {
         key: 'roundEnd';
         hiddenCard: NumberInfo;
+        winner: PID;
     }
     interface OthersWithPid {
         key: 'phaseStart' | 'noMoreCard' | 'phaseEnd';
@@ -63,7 +70,7 @@ namespace MessageNamespace {
     interface Others {
         key: 'roundStart';
     }
-    export type Type = DrawNumber | DrawItem | HPChange | UseItem | Ready | RoundEnd | OthersWithPid | Others;
+    export type Type = DrawNumber | DrawItem | ValueChange | TargetChange | UseItem | Ready | RoundEnd | OthersWithPid | Others;
 }
 
 export type Message = MessageNamespace.Type
