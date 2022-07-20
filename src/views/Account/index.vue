@@ -5,7 +5,7 @@
         <n-menu :options="sidebar" :value="$route.name"></n-menu>
       </n-layout-sider>
       <n-layout-content :native-scrollbar="false">
-        <router-view />
+        <router-view :key="$route.fullPath" />
       </n-layout-content>
     </n-layout>
   </div>

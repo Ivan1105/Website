@@ -30,19 +30,19 @@ export interface UserDetail {
 }
 
 /** 获取用户信息 */
-export const getUserDetail = function (uid?: string) {
+export const getUserDetail = async function (uid?: string) {
     if (!uid) uid = "";
     return axios(`/account/getUserDetail/${uid}`, {
         method: 'get'
     }).then((res: UserDetail) => {
-        res.icon = path.icon(res.icon!);
+        res.icon = path.icon(res.icon);
         return res;
     })
 };
 
 /** 触发动作按钮 */
-export const operateOthers = function (action: "follow" | "unfollow", uid: string | number) {
-    return axios("/account/operateOthers", {
+export const operateOthers = async function (action: "follow" | "unfollow", uid: string | number) {
+    await axios("/account/operateOthers", {
         method: "post",
         data: {
             uid,

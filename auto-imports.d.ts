@@ -3,6 +3,7 @@
 declare global {
   const NAlert: typeof import('naive-ui')['NAlert']
   const NButton: typeof import('naive-ui')['NButton']
+  const NCalendar: typeof import('naive-ui')['NCalendar']
   const NCard: typeof import('naive-ui')['NCard']
   const NCheckbox: typeof import('naive-ui')['NCheckbox']
   const NConfigProvider: typeof import('naive-ui')['NConfigProvider']

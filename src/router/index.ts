@@ -10,7 +10,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/tools',
     name: 'Tools',
-    meta: { title: 'Tools' },
+    meta: { title: '工具' },
     component: () => import('@/views/Tools/index.vue'),
     children: [
       {
@@ -52,8 +52,7 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: ':uid',
         name: 'AccountId',
-        meta: { title: '主页' },
-        component: () => import('@/views/Account/Home/index.vue')
+        component: () => import('@/views/Account/Others/index.vue')
       },
       {
         path: 'following',

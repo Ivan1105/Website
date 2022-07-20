@@ -3,8 +3,8 @@
     <!-- 发送框 -->
     <n-spin v-if="editable" :show="isSending">
       <n-el tag="div" class="card-add">
-        <n-input v-model:value="newTimeline" placeholder="发布一条新动态" type="textarea" autosize show-count maxlength="500"
-          @keyup.ctrl.enter="addTimeline" />
+        <n-input v-model:value="newTimeline" placeholder="发布一条新动态" type="textarea" :autosize="{ minRows: 3 }" show-count
+          maxlength="500" @keyup.ctrl.enter="addTimeline" />
         <n-button round type="primary" @click="addTimeline" :disabled="newTimeline.trim().length === 0">
           发送
         </n-button>
