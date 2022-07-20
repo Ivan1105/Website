@@ -1,12 +1,7 @@
 <template>
   <div class="account-container full-height">
     <n-layout position="absolute" has-sider>
-      <n-layout-sider
-        bordered
-        collapse-mode="transform"
-        :collapsed-width="0"
-        show-trigger
-      >
+      <n-layout-sider bordered collapse-mode="transform" :collapsed-width="0" show-trigger>
         <n-menu :options="sidebar" :value="$route.name"></n-menu>
       </n-layout-sider>
       <n-layout-content :native-scrollbar="false">
@@ -16,8 +11,8 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, h } from "@vue/runtime-core";
+<script lang="ts" setup>
+import { h } from "@vue/runtime-core";
 import { MenuOption } from "naive-ui";
 import { RouterLink } from "vue-router";
 
@@ -50,14 +45,6 @@ const sidebar: MenuOption[] = [
     key: "Settings",
   },
 ];
-
-export default defineComponent({
-  setup() {
-    return {
-      sidebar,
-    };
-  },
-});
 </script>
 
 <style lang="scss" scoped>

@@ -7,6 +7,7 @@ declare module 'vue' {
     Appbar: typeof import('./src/components/Appbar/index.vue')['default']
     BackTop: typeof import('./src/components/BackTop/index.vue')['default']
     Effects: typeof import('./src/components/Effects/index.vue')['default']
+    InfiniteScroll: typeof import('./src/components/InfiniteScroll/index.vue')['default']
     NAlert: typeof import('naive-ui')['NAlert']
     NButton: typeof import('naive-ui')['NButton']
     NCard: typeof import('naive-ui')['NCard']

@@ -3,33 +3,18 @@
     <!-- 发送框 -->
     <n-spin v-if="editable" :show="isSending">
       <n-el tag="div" class="card-add">
-        <n-input
-          v-model:value="newTimeline"
-          placeholder="发布一条新动态"
-          type="textarea"
-          autosize
-          show-count
-          maxlength="500"
-        />
-        <n-button
-          round
-          type="primary"
-          @click="addTimeline"
-          :disabled="newTimeline === ''"
-        >
+        <n-input v-model:value="newTimeline" placeholder="发布一条新动态" type="textarea" autosize show-count maxlength="500"
+          @keyup.ctrl.enter="addTimeline" />
+        <n-button round type="primary" @click="addTimeline" :disabled="newTimeline.trim().length === 0">
           发送
         </n-button>
       </n-el>
     </n-spin>
 
-    <n-thing class="card" v-for="(timeline, index) in timelines" :key="index">
+    <n-thing class="card" v-for="timeline in timelines" :key="timeline.id">
       <template #header> {{ timeline.username }} </template>
       <template #description>
-        <n-time
-          v-if="Date.now() - timeline.date > 172800000"
-          :time="timeline.date"
-          type="datetime"
-        />
+        <n-time v-if="Date.now() - timeline.date.getTime() > 172800000" :time="timeline.date" type="datetime" />
         <n-time v-else :time="timeline.date" type="relative" />
       </template>
       <template #default>
@@ -48,109 +33,81 @@
     </n-thing>
 
     <n-empty v-if="timelines.length === 0" description="还没有发表过动态哦" />
+
+    <infinite-scroll @update:loading="loadTimeline(uid)" v-model:loading="loading" :finished="finished">
+    </infinite-scroll>
   </n-el>
 </template>
 
-<script lang="ts">
-import { axios } from "@/utils";
+<script lang="ts" setup>
+import { timeline } from '@/api';
 import { TrashSharp } from "@vicons/ionicons5";
-import { defineComponent, Ref, ref, watch } from "@vue/runtime-core";
+import { Ref, ref, defineProps, onUpdated } from "@vue/runtime-core";
+import InfiniteScroll from "@/components/InfiniteScroll/index.vue";
 
-interface Timeline {
-  id: number;
-  username: string;
-  content: string;
-  date: string | Date;
-}
+type Timeline = timeline.Timeline;
+
+const props = defineProps({
+  editable: Boolean,
+  uid: String
+})
 
 /** 动态列表 */
 const timelines: Ref<Timeline[]> = ref([]);
+/** 正在加载 */
+const loading = ref(false);
+/** 完成加载 */
+const finished = ref(false);
+/** 当前页数 */
+let pageNum = 1;
+/** 每页大小 */
+const pageSize = 10;
+/** 获取对应用户的动态 */
+const loadTimeline = function (uid?: string) {
+  timeline.list({ uid, pageNum, pageSize }).then(res => {
+    res.forEach(v => {
+      v.content = v.content.replace(/./g, '*');
+    });
+    if (res.length <= pageSize)
+      finished.value = true;
+    else {
+      res.pop();
+      pageNum++;
+    }
+    timelines.value.push(...res);
+    loading.value = false;
+  });
+};
 
 /** 新增的动态内容 */
 const newTimeline = ref("");
+/** 正在发布 */
 const isSending = ref(false);
 const addTimeline = function () {
+  if (newTimeline.value.trim().length === 0) return;
   isSending.value = true;
-  axios("/timeline/add", {
-    method: "post",
-    data: {
-      content: newTimeline.value,
-    },
-  })
-    .then((res: Timeline) => {
-      res.date = new Date(res.date);
-      timelines.value.unshift(res);
-      newTimeline.value = "";
-    })
-    .finally(() => {
-      isSending.value = false;
-    });
+  timeline.add(newTimeline.value).then(res => {
+    timelines.value.unshift(res);
+    newTimeline.value = "";
+  }).finally(() => {
+    isSending.value = false;
+  });
 };
 
 /** 移除动态 */
 const removeTimeline = function (tar: Timeline) {
-  const id = tar.id;
-  const d = window.dialog?.warning({
+  const d = window.dialog!.warning({
     title: "警告",
     content: "这条动态的存在即将被你永久抹去",
     positiveText: "确定",
     negativeText: "取消",
-    onPositiveClick: () => {
-      d!.loading = true;
-      return new Promise<void>((resolve) => {
-        axios("/timeline/remove", {
-          method: "post",
-          data: {
-            id,
-          },
-        }).then(() => {
-          timelines.value.splice(timelines.value.indexOf(tar), 1);
-          resolve();
-        });
-      });
+    onPositiveClick: async () => {
+      d.loading = true;
+      await timeline.remove(tar.id);
+      timelines.value.splice(timelines.value.indexOf(tar), 1);
     },
   });
 };
-
-/** 获取对应用户的动态 */
-const getTimelineList = function (uid?: string) {
-  if (!uid) uid = "";
-  axios(`/timeline/list/${uid}`, {
-    method: "get",
-  }).then((res: Timeline[]) => {
-    res.forEach((v) => {
-      v.date = new Date(v.date);
-    });
-    timelines.value = res;
-  });
-};
-
-export default defineComponent({
-  components: { TrashSharp },
-  props: {
-    /** 能否编辑 */
-    editable: Boolean,
-    /** 看谁的动态 */
-    uid: String,
-  },
-  setup(props) {
-    watch(
-      () => props.uid,
-      (newVal) => {
-        getTimelineList(newVal);
-      }
-    );
-    getTimelineList(props.uid);
-
-    return {
-      timelines,
-      newTimeline,
-      addTimeline,
-      isSending,
-      removeTimeline,
-    };
-  },
-});
 </script>
 
 <style lang="scss" scoped>

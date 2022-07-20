@@ -41,7 +41,7 @@
                 <p v-for="(log, index) in logList" :key="index">{{ log }}</p>
             </div>
             <div class="my-container">
-                <n-space v-if="isMyTurn" class="action-container">
+                <n-space v-if="info.isMyTurn" class="action-container">
                     <n-button type="primary" @click="sendMessage({ key: 'draw' })">抽一张牌</n-button>
                     <n-button @click="sendMessage({ key: 'noMore' })">停止抽牌</n-button>
                 </n-space>
@@ -136,7 +136,6 @@ const addLog = function (s?: string) {
     })
 }
 
-const isMyTurn = ref(false);
 const isMyPid = function (pid: PID) {
     return pid === userInfo.uid;
 }
@@ -193,7 +192,8 @@ const info: Ref<AllInfo> = ref({
         hp: 5,
         atk: 1,
         def: 0
-    }
+    },
+    isMyTurn: false
 });
 
 /** 手牌总和 */
@@ -304,16 +304,17 @@ const handleGameStart = function () {
             case 'phaseStart':
                 if (isMyPid(message.pid)) {
                     addLog('你的回合');
-                    isMyTurn.value = true;
+                    info.value.isMyTurn = true;
                 }
                 break;
             case 'noMoreCard':
                 if (!isMyPid(message.pid)) addLog('对手停止进牌了');
                 break;
             case 'phaseEnd':
-                if (isMyPid(message.pid)) isMyTurn.value = false;
+                if (isMyPid(message.pid)) info.value.isMyTurn = false;
                 break;
             case 'roundStart':
+                info.value = message.gameInfo;
                 addLog('新的对局开始了，加油！');
                 break;
         }

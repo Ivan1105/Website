@@ -24,6 +24,7 @@ export interface PlayerInfo {
 export interface AllInfo {
     my: PlayerInfo;
     opponent: PlayerInfo;
+    isMyTurn: boolean;
 }
 
 namespace MessageNamespace {
@@ -67,10 +68,11 @@ namespace MessageNamespace {
         key: 'phaseStart' | 'noMoreCard' | 'phaseEnd';
         pid: PID;
     }
-    interface Others {
+    interface roundStart {
         key: 'roundStart';
+        gameInfo: AllInfo;
     }
-    export type Type = DrawNumber | DrawItem | ValueChange | TargetChange | UseItem | Ready | RoundEnd | OthersWithPid | Others;
+    export type Type = DrawNumber | DrawItem | ValueChange | TargetChange | UseItem | Ready | RoundEnd | OthersWithPid | roundStart;
 }
 
 export type Message = MessageNamespace.Type

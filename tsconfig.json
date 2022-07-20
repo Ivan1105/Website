@@ -12,6 +12,7 @@
     "sourceMap": true,
     "baseUrl": ".",
     "types": [
+      "naive-ui/volar",
       "webpack-env"
     ],
     "paths": {

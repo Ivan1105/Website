@@ -4,16 +4,8 @@
   </div>
 </template>
 
-<script>
-import { defineComponent } from "@vue/runtime-core";
+<script lang="ts" setup>
 import Timeline from "../components/Timeline/index.vue";
-
-export default defineComponent({
-  components: { Timeline },
-  setup() {
-    return {};
-  },
-});
 </script>
 
 

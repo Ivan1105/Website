@@ -4,12 +4,12 @@
       <img class="icon" :src="userInfo.icon!" alt="icon" />
       <div class="mask" @click="handleIconClick">更改头像</div>
     </div>
-    <input v-show="false" ref="iconUploader" type="file" accept="image/png, image/jpeg" @change="handleIconChange" />
+    <input ref="iconUploader" type="file" accept="image/png, image/jpeg" @change="handleIconChange" />
     <n-modal v-model:show="showModal" :mask-closable="false">
       <n-spin :show="uploadingIcon">
         <n-card class="icon-adjust" title="调整头像" closable @close="handleCloseModal">
           <template #default>
-            <div class="icon-container">
+            <div class="new-icon-container">
               <img ref="newIcon" :src="cropIcon" />
             </div>
           </template>
@@ -51,7 +51,7 @@
           <n-input v-model:value="setPassword.repeat" type="password" :input-props="{ autocomplete: 'off' }" />
         </n-form-item-gi>
         <n-grid-item span="2">
-          <n-button type="primary" @click="handleUpdatePassword">提交</n-button>
+          <n-button type="primary" block @click="handleUpdatePassword">提交</n-button>
         </n-grid-item>
       </n-grid>
     </n-form>

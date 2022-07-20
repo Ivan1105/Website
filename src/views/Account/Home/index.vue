@@ -20,7 +20,7 @@
         </n-space>
       </div>
 
-      <nav v-show="uid" class="actions">
+      <nav v-if="Number(uid) !== userInfo?.uid" class="actions">
         <n-space justify="center">
           <n-button v-if="!userDetail.following" @click="handleActionsClick('follow')">
             <template #icon>
@@ -53,16 +53,17 @@
     <n-divider />
 
     <n-h3>TA的动态</n-h3>
-    <Timeline :uid="uid"></Timeline>
+    <Timeline :uid="uid" :key="uid"></Timeline>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { Ref, ref, watch } from "@vue/runtime-core";
+import { Ref, ref, watch, inject } from "@vue/runtime-core";
 import { Heart, HeartOutline, MailOutline } from "@vicons/ionicons5";
 import Timeline from "../components/Timeline/index.vue";
 import { useRoute, useRouter } from "vue-router";
 import { account } from '@/api';
+import { injection } from "@/utils";
 
 /** 用户信息 */
 const userDetail: Ref<account.UserDetail> = ref({
@@ -73,6 +74,7 @@ const userDetail: Ref<account.UserDetail> = ref({
   username: '',
 });
 const uid: Ref<string | undefined> = ref(undefined);
+const userInfo = inject(injection.userInfoKey);
 
 /** 触发动作按钮 */
 const handleActionsClick = function (action: "follow" | "unfollow") {

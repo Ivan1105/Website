@@ -19,19 +19,18 @@ instance.interceptors.request.use(config => {
     window.message?.error('请求异常中断', err);
 })
 
-const http = function (url: string, config?: AxiosRequestConfig<any>, showMessage = true): Promise<any> {
-    return instance(url, config).then(res => {
-        if (process.env.NODE_ENV === 'development') {
-            console.info('追踪路径 => ', url);
-            console.info('获取数据 => ', res);
-        }
-
-        if (res.data.code !== 'C-000') {
-            if (showMessage) window.message?.error(res.data.msg)
-            throw res.data.msg;
-        }
-        return res.data.context;
-    });
+const http = async function (url: string, config?: AxiosRequestConfig<any>, showMessage = true): Promise<any> {
+    const res = await instance(url, config);
+    if (process.env.NODE_ENV === 'development') {
+        console.info('追踪路径 => ', url);
+        console.info('获取数据 => ', res);
+    }
+    if (res.data.code !== 'C-000') {
+        if (showMessage)
+            window.message?.error(res.data.msg);
+        throw res.data.msg;
+    }
+    return res.data.context;
 }
 
 export default http
