@@ -2,6 +2,7 @@
 // We suggest you to commit this file into source control
 declare global {
   const NAlert: typeof import('naive-ui')['NAlert']
+  const NAvatar: typeof import('naive-ui')['NAvatar']
   const NButton: typeof import('naive-ui')['NButton']
   const NCalendar: typeof import('naive-ui')['NCalendar']
   const NCard: typeof import('naive-ui')['NCard']

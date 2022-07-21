@@ -2,16 +2,33 @@
   <n-el tag="div" class="cards-container">
     <!-- 发送框 -->
     <n-spin v-if="editable" :show="isSending">
-      <n-el tag="div" class="card-add">
-        <n-input v-model:value="newTimeline" placeholder="发布一条新动态" type="textarea" :autosize="{ minRows: 3 }" show-count
-          maxlength="500" @keyup.ctrl.enter="addTimeline" />
-        <n-button round type="primary" @click="addTimeline" :disabled="newTimeline.trim().length === 0">
-          发送
-        </n-button>
-      </n-el>
+      <div class="card-add">
+        <n-input v-model:value="newTimeline.content" placeholder="发布一条新动态（ctrl+enter发送）" type="textarea"
+          :autosize="{ minRows: 3 }" show-count maxlength="500" @keyup.ctrl.enter="addTimeline" />
+
+        <n-space style="margin-top: 10px;" justify="end" align="center">
+          <n-dropdown trigger="click" :options="privacyOptions" @select="handlePrivacyChange">
+            <n-button text icon-placement="right">
+              {{ privacyOptions[newTimeline.privacy].label }}
+              <template #icon>
+                <n-icon>
+                  <chevron-down></chevron-down>
+                </n-icon>
+              </template>
+            </n-button>
+          </n-dropdown>
+
+          <n-button round type="primary" @click="addTimeline" :disabled="newTimeline.content.trim().length === 0">
+            发送
+          </n-button>
+        </n-space>
+      </div>
     </n-spin>
 
-    <n-thing class="card" v-for="timeline in timelines" :key="timeline.id">
+    <n-thing class="card" v-for="timeline in timelines" :key="timeline.id" content-indented>
+      <template #avatar>
+        <n-avatar round :src="timeline.icon" size="large" lazy></n-avatar>
+      </template>
       <template #header> {{ timeline.username }} </template>
       <template #description>
         <n-time v-if="Date.now() - timeline.date.getTime() > 172800000" :time="timeline.date" type="datetime" />
@@ -41,9 +58,10 @@
 
 <script lang="ts" setup>
 import { timeline } from '@/api';
-import { TrashSharp } from "@vicons/ionicons5";
-import { Ref, ref, defineProps, onUpdated } from "@vue/runtime-core";
+import { TrashSharp, ChevronDown } from "@vicons/ionicons5";
+import { Ref, ref, defineProps, reactive } from "@vue/runtime-core";
 import InfiniteScroll from "@/components/InfiniteScroll/index.vue";
+import { DropdownOption } from 'naive-ui';
 
 type Timeline = timeline.Timeline;
 
@@ -65,9 +83,6 @@ const pageSize = 10;
 /** 获取对应用户的动态 */
 const loadTimeline = function (uid?: string) {
   timeline.list({ uid, pageNum, pageSize }).then(res => {
-    res.forEach(v => {
-      v.content = v.content.replace(/./g, '*');
-    });
     if (res.length <= pageSize)
       finished.value = true;
     else {
@@ -80,15 +95,19 @@ const loadTimeline = function (uid?: string) {
 };
 
 /** 新增的动态内容 */
-const newTimeline = ref("");
+const newTimeline = reactive({
+  content: '',
+  privacy: 0,
+})
 /** 正在发布 */
 const isSending = ref(false);
+/** 发布新动态 */
 const addTimeline = function () {
-  if (newTimeline.value.trim().length === 0) return;
+  if (newTimeline.content.trim().length === 0) return;
   isSending.value = true;
-  timeline.add(newTimeline.value).then(res => {
+  timeline.add(newTimeline).then(res => {
     timelines.value.unshift(res);
-    newTimeline.value = "";
+    newTimeline.content = "";
   }).finally(() => {
     isSending.value = false;
   });
@@ -108,8 +127,45 @@ const removeTimeline = function (tar: Timeline) {
     },
   });
 };
+
+/** 隐私选项 */
+const privacyOptions: DropdownOption[] = [
+  { label: '仅自己可见', key: 0 },
+  { label: '仅我关注的人可见', key: 1 },
+  { label: '所有人可见', key: 2 }
+]
+
+/** 更改隐私 */
+const handlePrivacyChange = function (key: number) {
+  newTimeline.privacy = key;
+}
 </script>
 
 <style lang="scss" scoped>
-@import "./index";
+.cards-container {
+  .card-add {
+    border: 1px solid var(--border-color);
+    padding: 1em 2em;
+  }
+
+  .card {
+    margin-top: 20px;
+    padding: 1em 2em;
+    border: 1px solid var(--border-color);
+
+    :deep(.n-thing-main__content) {
+      word-break: break-all;
+    }
+
+    :deep(.n-thing-header__extra) {
+      button {
+        vertical-align: middle;
+      }
+    }
+  }
+
+  .n-empty {
+    margin-top: 20px;
+  }
+}
 </style>

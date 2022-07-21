@@ -9,6 +9,7 @@ declare module 'vue' {
     Effects: typeof import('./src/components/Effects/index.vue')['default']
     InfiniteScroll: typeof import('./src/components/InfiniteScroll/index.vue')['default']
     NAlert: typeof import('naive-ui')['NAlert']
+    NAvatar: typeof import('naive-ui')['NAvatar']
     NButton: typeof import('naive-ui')['NButton']
     NCalendar: typeof import('naive-ui')['NCalendar']
     NCard: typeof import('naive-ui')['NCard']
