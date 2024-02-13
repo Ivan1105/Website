@@ -28,7 +28,8 @@
     "src/**/*.tsx",
     "src/**/*.vue",
     "auto-imports.d.ts",
-    "components.d.ts"
+    "components.d.ts",
+    "typed-router.d.ts",
   ],
   "references": [
     {

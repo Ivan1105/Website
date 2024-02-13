@@ -1,5 +1,5 @@
 <template>
-  <v-app-bar style="position: fixed;" scroll-behavior="hide">
+  <v-app-bar style="position: fixed;" scroll-behavior="elevate">
     <v-app-bar-title>
       <router-link class="title" to="/">
         <v-avatar image="@/assets/favicon.ico" />
@@ -12,7 +12,9 @@
     </template>
 
     <template v-if="mdAndUp" #append>
-      <v-btn v-for="item in menus.filter(({ mode }) => mode & 1)" :key="item.title" :to="item.props.to">{{ item.title }}</v-btn>
+      <v-btn v-for="item in menus.filter(({ mode }) => mode & 1)" :key="item.title" :to="item.props.to">
+        {{ item.title }}
+      </v-btn>
       <v-btn v-if="themeName === 'light'" icon="mdi-weather-sunny" @click="changeTheme('dark')" />
       <v-btn v-else icon="mdi-weather-night" @click="changeTheme('light')" />
     </template>

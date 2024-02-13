@@ -33,10 +33,10 @@ export const useAppStore = defineStore('app', () => {
       }
     },
     {
-      title: '工具',
+      title: '导航',
       mode: 3,
       props: {
-        to: '/',//{ name: 'tool' },
+        to: '/navi',
         prependIcon: 'mdi-toolbox',
         rounded: 'shaped'
       }
