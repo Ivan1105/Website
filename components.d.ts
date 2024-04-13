@@ -9,7 +9,9 @@ declare module 'vue' {
   export interface GlobalComponents {
     BackgroundTitle: typeof import('./src/components/specifics/BackgroundTitle.vue')['default']
     IEffects: typeof import('./src/components/IEffects.vue')['default']
+    PhotosViewer: typeof import('./src/components/specifics/PhotosViewer.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    Viewer: typeof import('./src/components/specifics/Viewer.vue')['default']
   }
 }
