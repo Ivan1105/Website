@@ -16,11 +16,11 @@
 <script lang="ts" setup>
 /** 背景图片列表 */
 const imgs = ref([
-  "https://oss.ivan1105.top/static/view-1.jpg",
-  "https://oss.ivan1105.top/static/view-2.jpg",
-  "https://oss.ivan1105.top/static/view-3.png",
-  "https://oss.ivan1105.top/static/view-4.jpg",
-  "https://oss.ivan1105.top/static/view-5.png",
+  import.meta.env.VITE_OSS_URL + "/static/view-1.jpg",
+  import.meta.env.VITE_OSS_URL + "/static/view-2.jpg",
+  import.meta.env.VITE_OSS_URL + "/static/view-3.png",
+  import.meta.env.VITE_OSS_URL + "/static/view-4.jpg",
+  import.meta.env.VITE_OSS_URL + "/static/view-5.png",
 ]);
 
 /** 样式列表 */

@@ -1,5 +1,5 @@
 <template>
-  <v-app-bar style="position: fixed;" scroll-behavior="elevate">
+  <v-app-bar style="position: fixed;" scroll-behavior="hide" >
     <v-app-bar-title>
       <router-link class="title" to="/">
         <v-avatar image="@/assets/favicon.ico" />

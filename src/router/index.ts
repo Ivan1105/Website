@@ -10,7 +10,13 @@ import { setupLayouts } from 'virtual:generated-layouts'
 
 const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),
-  extendRoutes: setupLayouts,
+  extendRoutes: routes => {
+    let rs = setupLayouts(routes);
+    rs.forEach(r => {
+      if (r.path === '/Admin') r.component = () => import('@/layouts/Admin.vue');
+    });
+    return rs;
+  },
 })
 
 export default router

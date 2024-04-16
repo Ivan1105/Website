@@ -45,7 +45,7 @@ export const useAppStore = defineStore('app', () => {
       title: '登录',
       mode: 1,
       props: {
-        to: '/',//{ name: 'tool' },
+        to: '/login',
         prependIcon: 'mdi-toolbox',
         rounded: 'shaped'
       }

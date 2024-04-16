@@ -40,6 +40,9 @@ import type {
 declare module 'vue-router/auto/routes' {
   export interface RouteNamedMap {
     '/': RouteRecordInfo<'/', '/', Record<never, never>, Record<never, never>>,
+    '/Admin/': RouteRecordInfo<'/Admin/', '/Admin', Record<never, never>, Record<never, never>>,
+    '/Admin/Permission': RouteRecordInfo<'/Admin/Permission', '/Admin/Permission', Record<never, never>, Record<never, never>>,
+    '/Login': RouteRecordInfo<'/Login', '/Login', Record<never, never>, Record<never, never>>,
     '/Navi': RouteRecordInfo<'/Navi', '/Navi', Record<never, never>, Record<never, never>>,
     '/Photos/': RouteRecordInfo<'/Photos/', '/Photos', Record<never, never>, Record<never, never>>,
   }
