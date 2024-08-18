@@ -79,12 +79,10 @@ instance.interceptors.request.use(config => {
 })
 
 // 响应拦截
-// instance.interceptors.response.use(({ config, data }) => {
-    // if (data.code !== 'C-200') throw data;
-    // return data.data;
-    // console.log(data);
+instance.interceptors.response.use(({ config, data }) => {
+    if (data.code !== 0) throw data;
+    return data.data;
 
-    // return data;
     // const store = useStore();
     // if (config.sync) store.finishSpinning()
     // CancelHandler.remove(config);
@@ -97,13 +95,13 @@ instance.interceptors.request.use(config => {
     //     throw data;
     // }
     // return data.context;
-// }, err => {
-    // console.log(err);
+}, err => {
+    console.log(err);
     // const store = useStore();
     // if (err?.config?.sync) store.finishSpinning()
     // if (err.code !== "ERR_CANCELED") store.pushMessage(err?.response?.data || err?.message || '请求异常中断');
-    // throw err;
-// })
+    throw err;
+})
 
 interface AxiosInstance extends Axios {
     (config: AxiosRequestConfig): any;

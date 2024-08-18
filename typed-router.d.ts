@@ -42,9 +42,12 @@ declare module 'vue-router/auto/routes' {
     '/': RouteRecordInfo<'/', '/', Record<never, never>, Record<never, never>>,
     '/Admin/': RouteRecordInfo<'/Admin/', '/Admin', Record<never, never>, Record<never, never>>,
     '/Admin/Permission': RouteRecordInfo<'/Admin/Permission', '/Admin/Permission', Record<never, never>, Record<never, never>>,
+    '/Games/Guess/': RouteRecordInfo<'/Games/Guess/', '/Games/Guess', Record<never, never>, Record<never, never>>,
+    '/Games/Shoot/': RouteRecordInfo<'/Games/Shoot/', '/Games/Shoot', Record<never, never>, Record<never, never>>,
+    '/Games/Xray/': RouteRecordInfo<'/Games/Xray/', '/Games/Xray', Record<never, never>, Record<never, never>>,
     '/Login': RouteRecordInfo<'/Login', '/Login', Record<never, never>, Record<never, never>>,
-    '/Navi': RouteRecordInfo<'/Navi', '/Navi', Record<never, never>, Record<never, never>>,
-    '/Photos/': RouteRecordInfo<'/Photos/', '/Photos', Record<never, never>, Record<never, never>>,
+    '/Navi/': RouteRecordInfo<'/Navi/', '/Navi', Record<never, never>, Record<never, never>>,
+    '/Toolbox/GameList/': RouteRecordInfo<'/Toolbox/GameList/', '/Toolbox/GameList', Record<never, never>, Record<never, never>>,
   }
 }
 

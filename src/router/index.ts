@@ -14,6 +14,7 @@ const router = createRouter({
     let rs = setupLayouts(routes);
     rs.forEach(r => {
       if (r.path === '/Admin') r.component = () => import('@/layouts/Admin.vue');
+      if (r.path === '/Games') r.component = () => import('@/layouts/FullScreen.vue');
     });
     return rs;
   },

@@ -2,10 +2,11 @@
   "name": "web",
   "version": "0.0.0",
   "scripts": {
-    "dev": "cross-env NODE_OPTIONS='--no-warnings' vite",
+    "dev": "cross-env NODE_OPTIONS='--no-warnings' vite --host",
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
-    "lint": "eslint . --fix --ignore-path .gitignore"
+    "lint": "eslint . --fix --ignore-path .gitignore",
+    "update": "yarn upgrade-interactive"
   },
   "dependencies": {
     "@mdi/font": "7.0.96",
@@ -14,7 +15,8 @@
     "core-js": "^3.34.0",
     "roboto-fontface": "*",
     "vue": "^3.3.0",
-    "vuetify": "^3.0.0"
+    "vuetify": "^3.0.0",
+    "zrender": "^5.5.0"
   },
   "devDependencies": {
     "@babel/types": "^7.23.0",
