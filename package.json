@@ -1,0 +1,39 @@
+{
+  "name": "sites",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "nuxt typecheck",
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "mcp": "ruler apply",
+    "mcp:revert": "ruler revert"
+  },
+  "dependencies": {
+    "@mdi/font": "7.4.47",
+    "@nuxtjs/i18n": "^10.2.3",
+    "cropperjs": "^2.3.0",
+    "isomorphic-dompurify": "^4.4.0",
+    "markdown-it": "^15.0.2",
+    "nuxt": "^4.4.2",
+    "pinia": "^3.0.4",
+    "vue": "^3.5.30",
+    "vuetify": "^4.2.4",
+    "vuetify-nuxt-module": "1.0.0-rc.6"
+  },
+  "devDependencies": {
+    "@intellectronica/ruler": "^0.3.37",
+    "@nuxt/fonts": "^0.14.0",
+    "@pinia/nuxt": "^0.11.3",
+    "@tailwindcss/postcss": "^4.2.1",
+    "@types/markdown-it": "^14.2.0",
+    "lightningcss": "1.32.0",
+    "sass": "^1.98.0",
+    "tailwindcss": "^4.2.1",
+    "typescript": "~5.9.3",
+    "vue-tsc": "^3.3.12"
+  }
+}
