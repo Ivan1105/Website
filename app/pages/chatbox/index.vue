@@ -37,25 +37,37 @@
               <v-btn v-bind="props" icon="mdi-cog-outline" variant="text" color="secondary" size="small"
                 class="chat-settings-trigger" :disabled="busy" aria-label="打开设置" />
             </template>
-            <v-list class="chat-settings-menu" density="compact" min-width="280" aria-label="聊天设置">
-              <v-list-item class="settings-toggle-item" prepend-icon="mdi-bell-outline">
+            <v-list class="chat-settings-menu" density="compact" aria-label="聊天设置">
+              <v-list-item class="chat-setting-item settings-toggle-item" prepend-icon="mdi-bell-outline">
                 <v-list-item-title>主动提醒功能</v-list-item-title>
+                <v-list-item-subtitle class="chat-setting-description">
+                  开启后，{{ currentConversation.display_name }}会在合适的时候主动来找你。
+                </v-list-item-subtitle>
                 <template #append>
                   <v-switch :model-value="currentConversation?.proactive_enabled ?? false" color="secondary"
                     density="compact" hide-details :loading="proactiveUpdating" :disabled="proactiveUpdating"
                     aria-label="主动提醒功能" @click.stop @update:model-value="updateProactiveReminder" />
                 </template>
               </v-list-item>
-              <v-list-item class="settings-toggle-item" prepend-icon="mdi-text-box-outline">
-                <v-list-item-title>自动记录日志</v-list-item-title>
+              <v-list-item class="chat-setting-item settings-toggle-item" prepend-icon="mdi-book-open-page-variant-outline">
+                <v-list-item-title>自动记录日记</v-list-item-title>
+                <v-list-item-subtitle class="chat-setting-description">
+                  开启后，{{ currentConversation.display_name }}会每天写下与你共度的时光。
+                </v-list-item-subtitle>
                 <template #append>
                   <v-switch :model-value="currentConversation?.journal_enabled ?? false" color="secondary"
                     density="compact" hide-details :loading="journalUpdating" :disabled="journalUpdating"
-                    aria-label="自动记录日志" @click.stop @update:model-value="updateJournal" />
+                    aria-label="自动记录日记" @click.stop @update:model-value="updateJournal" />
                 </template>
               </v-list-item>
               <v-divider />
-              <v-list-item prepend-icon="mdi-broom" title="清空上下文" :disabled="busy" @click="openClearContextDialog" />
+              <v-list-item class="chat-setting-item" prepend-icon="mdi-chat-plus-outline" :disabled="busy"
+                @click="openClearContextDialog">
+                <v-list-item-title>新建会话</v-list-item-title>
+                <v-list-item-subtitle class="chat-setting-description">
+                  开始一段新的对话，已有记忆会继续保留。
+                </v-list-item-subtitle>
+              </v-list-item>
             </v-list>
           </v-menu>
         </header>
@@ -115,12 +127,12 @@
     </div>
     <v-dialog v-model="clearContextDialogOpen" :persistent="creatingThread" max-width="440">
       <v-card>
-        <v-card-title>清空上下文</v-card-title>
-        <v-card-text>确认清空当前上下文并开始新对话吗？</v-card-text>
+        <v-card-title>新建会话</v-card-title>
+        <v-card-text>确认开始一段新的对话吗？当前聊天记录将结束，但已有记忆会继续保留。</v-card-text>
         <v-card-actions>
           <v-spacer />
           <v-btn variant="text" :disabled="creatingThread" @click="clearContextDialogOpen = false">取消</v-btn>
-          <v-btn color="primary" :loading="creatingThread" :disabled="creatingThread" @click="clearContext">确认清空</v-btn>
+          <v-btn color="primary" :loading="creatingThread" :disabled="creatingThread" @click="clearContext">新建会话</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -444,11 +456,34 @@ onMounted(async () => {
 }
 
 .chat-settings-menu {
+  width: min(360px, calc(100vw - 24px));
   padding-block: 6px;
   border: 1px solid var(--site-border);
 }
 
+.chat-setting-item {
+  min-height: 76px;
+  padding-block: 10px;
+}
+
+.chat-setting-description {
+  margin-top: 4px;
+  color: var(--site-muted);
+  font-size: 0.72rem;
+  line-height: 1.55;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  -webkit-line-clamp: unset;
+}
+
+.chat-setting-item :deep(.v-list-item__prepend) {
+  align-self: start;
+  padding-top: 3px;
+}
+
 .settings-toggle-item :deep(.v-list-item__append) {
+  align-self: center;
   margin-inline-start: var(--site-space-3);
 }
 
