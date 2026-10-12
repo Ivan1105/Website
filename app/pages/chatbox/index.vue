@@ -38,12 +38,20 @@
                 class="chat-settings-trigger" :disabled="busy" aria-label="打开设置" />
             </template>
             <v-list class="chat-settings-menu" density="compact" min-width="280" aria-label="聊天设置">
-              <v-list-item class="proactive-reminder-item" prepend-icon="mdi-bell-outline">
+              <v-list-item class="settings-toggle-item" prepend-icon="mdi-bell-outline">
                 <v-list-item-title>主动提醒功能</v-list-item-title>
                 <template #append>
                   <v-switch :model-value="currentConversation?.proactive_enabled ?? false" color="secondary"
                     density="compact" hide-details :loading="proactiveUpdating" :disabled="proactiveUpdating"
                     aria-label="主动提醒功能" @click.stop @update:model-value="updateProactiveReminder" />
+                </template>
+              </v-list-item>
+              <v-list-item class="settings-toggle-item" prepend-icon="mdi-text-box-outline">
+                <v-list-item-title>自动记录日志</v-list-item-title>
+                <template #append>
+                  <v-switch :model-value="currentConversation?.journal_enabled ?? false" color="secondary"
+                    density="compact" hide-details :loading="journalUpdating" :disabled="journalUpdating"
+                    aria-label="自动记录日志" @click.stop @update:model-value="updateJournal" />
                 </template>
               </v-list-item>
               <v-divider />
@@ -164,6 +172,7 @@ const creatingThread = ref(false)
 const clearContextDialogOpen = ref(false)
 const settingsMenuOpen = ref(false)
 const proactiveUpdating = ref(false)
+const journalUpdating = ref(false)
 const drawerOpen = ref(false)
 const snackbar = reactive({ show: false, text: '', timeout: 6000 })
 const showError = (text: string) => {
@@ -251,6 +260,23 @@ const updateProactiveReminder = async (value: boolean | null) => {
     if (!handleUnauthorized(error)) showError('主动提醒设置失败，请稍后重试。')
   } finally {
     proactiveUpdating.value = false
+  }
+}
+
+const updateJournal = async (value: boolean | null) => {
+  const conversation = currentConversation.value
+  if (!conversation || journalUpdating.value) return
+  const enabled = Boolean(value)
+  if (enabled === conversation.journal_enabled) return
+
+  journalUpdating.value = true
+  try {
+    await chatApi.updateJournal({ agentId: conversation.name, enabled })
+    conversation.journal_enabled = enabled
+  } catch (error) {
+    if (!handleUnauthorized(error)) showError('自动记录日志设置失败，请稍后重试。')
+  } finally {
+    journalUpdating.value = false
   }
 }
 
@@ -422,11 +448,11 @@ onMounted(async () => {
   border: 1px solid var(--site-border);
 }
 
-.proactive-reminder-item :deep(.v-list-item__append) {
+.settings-toggle-item :deep(.v-list-item__append) {
   margin-inline-start: var(--site-space-3);
 }
 
-.proactive-reminder-item :deep(.v-switch) {
+.settings-toggle-item :deep(.v-switch) {
   flex: 0 0 auto;
 }
 
