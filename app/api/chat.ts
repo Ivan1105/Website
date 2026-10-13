@@ -24,10 +24,18 @@ export interface MessagePaginationDTO {
   has_more: boolean
 }
 
+export interface ActiveRunUserMessageDTO {
+  id: string
+  role: 'user'
+  content: string
+  createdAt: string
+}
+
 export interface ActiveRunDTO {
   run_id: string
   status: 'running'
   started_at: string
+  user_message: ActiveRunUserMessageDTO
 }
 
 export interface QueryMessagesDTO {

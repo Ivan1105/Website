@@ -3,6 +3,7 @@ export { ApiError, isApiError } from './http'
 export { useChatApi } from './chat'
 export type {
   ActiveRunDTO,
+  ActiveRunUserMessageDTO,
   ConversationDTO,
   CreateThreadDTO,
   MessageDTO,

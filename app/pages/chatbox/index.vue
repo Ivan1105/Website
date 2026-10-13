@@ -295,6 +295,10 @@ const loadMessages = async () => {
     messagesTotal.value = result.pagination.total
     activeRun = result.active_run
     if (activeRun) {
+      const userMessage = activeRun.user_message
+      if (!currentMessages.value.some(message => message.id === userMessage.id)) {
+        currentMessages.value.push(userMessage)
+      }
       currentMessages.value.push({
         id: `run:${activeRun.run_id}`,
         role: 'assistant',
