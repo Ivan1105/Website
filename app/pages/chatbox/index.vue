@@ -7,7 +7,7 @@
     <div class="chatbox-container">
       <aside class="desktop-conversations surface-card" aria-label="会话列表">
         <ConversationList :conversations="conversations" :selected="currentConversationId" :pending="conversationsLoading"
-          :error="conversationsError" :disabled="busy" @select="selectConversation" />
+          :error="conversationsError" :disabled="conversationSelectionDisabled" @select="selectConversation" />
       </aside>
       <section class="chat-area surface-card" aria-label="聊天">
         <header class="chat-header">
@@ -18,7 +18,7 @@
             </template>
             <v-card class="drawer-card">
               <ConversationList :conversations="conversations" :selected="currentConversationId" :pending="conversationsLoading"
-                :error="conversationsError" :disabled="busy" @select="selectConversation">
+                :error="conversationsError" :disabled="conversationSelectionDisabled" @select="selectConversation">
                 <template #actions><v-btn icon="mdi-close" variant="text" aria-label="关闭会话列表" @click="drawerOpen = false" /></template>
               </ConversationList>
             </v-card>
@@ -35,7 +35,7 @@
             :close-on-content-click="false" offset="8">
             <template #activator="{ props }">
               <v-btn v-bind="props" icon="mdi-cog-outline" variant="text" color="secondary" size="small"
-                class="chat-settings-trigger" :disabled="busy" aria-label="打开设置" />
+                class="chat-settings-trigger" :disabled="conversationSelectionDisabled" aria-label="打开设置" />
             </template>
             <v-list class="chat-settings-menu" density="compact" aria-label="聊天设置">
               <v-list-item class="chat-setting-item settings-toggle-item" prepend-icon="mdi-bell-outline">
@@ -61,7 +61,7 @@
                 </template>
               </v-list-item>
               <v-divider />
-              <v-list-item class="chat-setting-item" prepend-icon="mdi-chat-plus-outline" :disabled="busy"
+              <v-list-item class="chat-setting-item" prepend-icon="mdi-chat-plus-outline" :disabled="conversationSelectionDisabled"
                 @click="openClearContextDialog">
                 <v-list-item-title>新建会话</v-list-item-title>
                 <v-list-item-subtitle class="chat-setting-description">
@@ -157,7 +157,7 @@
 </template>
 
 <script setup lang="ts">
-import { isApiError, useChatApi, type ConversationDTO, type MessageDTO } from '@/api'
+import { isApiError, useChatApi, type ActiveRunDTO, type ConversationDTO, type MessageDTO } from '@/api'
 import { useAppStore } from '@/stores/app'
 import { useDisplay } from 'vuetify'
 import DOMPurify from 'isomorphic-dompurify'
@@ -198,6 +198,8 @@ const historyLoadError = ref(false)
 const messagesPage = ref(0)
 const messagesHasMore = ref(false)
 const messagesTotal = ref(0)
+const activeRunId = ref<string | null>(null)
+const activeReplyId = ref<string | null>(null)
 const creatingThread = ref(false)
 const clearContextDialogOpen = ref(false)
 const settingsMenuOpen = ref(false)
@@ -211,9 +213,12 @@ const showError = (text: string) => {
 }
 const currentConversation = computed(() => conversations.value.find(c => c.name === currentConversationId.value))
 const busy = computed(() => authRequired.value || sending.value || creatingThread.value || loading.value || conversationsLoading.value)
+const conversationSelectionDisabled = computed(() => authRequired.value || creatingThread.value || loading.value || conversationsLoading.value)
 const historyLoaderLabel = computed(() => `加载更早的消息，当前已显示 ${currentMessages.value.length} 条，共 ${messagesTotal.value} 条`)
 const MESSAGES_PAGE_SIZE = 20
 let messagesLoadVersion = 0
+let streamVersion = 0
+let streamAbortController: AbortController | null = null
 watch(mobile, value => {
   if (!value) drawerOpen.value = false
 })
@@ -228,6 +233,16 @@ const formatTime = (value: string) => {
 }
 const scrollToBottom = () => {
   if (messagesAreaRef.value) messagesAreaRef.value.scrollTop = messagesAreaRef.value.scrollHeight
+}
+const stopActiveStream = () => {
+  streamVersion += 1
+  streamAbortController?.abort()
+  streamAbortController = null
+  const activeReply = currentMessages.value.find(message => message.id === activeReplyId.value)
+  if (activeReply) activeReply.loading = false
+  activeRunId.value = null
+  activeReplyId.value = null
+  sending.value = false
 }
 const resetMessagesPagination = () => {
   messagesLoadVersion += 1
@@ -264,8 +279,10 @@ const loadConversations = async () => {
 const loadMessages = async () => {
   const threadId = currentConversation.value?.thread_id
   if (!threadId) return
+  stopActiveStream()
   resetMessagesPagination()
   const loadVersion = messagesLoadVersion
+  let activeRun: ActiveRunDTO | null = null
   loading.value = true
   messagesError.value = ''
   currentMessages.value = []
@@ -276,11 +293,70 @@ const loadMessages = async () => {
     messagesPage.value = result.pagination.page
     messagesHasMore.value = result.pagination.has_more
     messagesTotal.value = result.pagination.total
+    activeRun = result.active_run
+    if (activeRun) {
+      currentMessages.value.push({
+        id: `run:${activeRun.run_id}`,
+        role: 'assistant',
+        content: '',
+        createdAt: activeRun.started_at,
+        loading: true,
+      })
+    }
   } catch (error) {
     if (loadVersion === messagesLoadVersion && !handleUnauthorized(error)) messagesError.value = '消息加载失败。'
   } finally {
     if (loadVersion === messagesLoadVersion) {
       loading.value = false
+      await nextTick()
+      scrollToBottom()
+    }
+  }
+  if (activeRun && loadVersion === messagesLoadVersion && currentConversation.value?.thread_id === threadId) {
+    void streamActiveRun(activeRun.run_id, `run:${activeRun.run_id}`, threadId)
+  }
+}
+
+const streamActiveRun = async (runId: string, replyId: string, threadId: string) => {
+  if (activeRunId.value === runId && streamAbortController) return
+
+  stopActiveStream()
+  const controller = new AbortController()
+  const currentStreamVersion = streamVersion
+  streamAbortController = controller
+  activeRunId.value = runId
+  activeReplyId.value = replyId
+  sending.value = true
+
+  const reply = currentMessages.value.find(message => message.id === replyId)
+  if (!reply) {
+    stopActiveStream()
+    return
+  }
+  reply.content = ''
+  reply.loading = true
+
+  try {
+    await chatApi.streamRun(runId, (chunk: string) => {
+      if (currentStreamVersion !== streamVersion || currentConversation.value?.thread_id !== threadId) return
+      const message = currentMessages.value.find(item => item.id === replyId)
+      if (message) {
+        message.content += chunk
+        nextTick(scrollToBottom)
+      }
+    }, controller.signal)
+  } catch (error) {
+    if (currentStreamVersion === streamVersion && !controller.signal.aborted) {
+      if (!handleUnauthorized(error)) showError('回复连接中断，刷新页面可继续获取。')
+    }
+  } finally {
+    if (currentStreamVersion === streamVersion) {
+      const message = currentMessages.value.find(item => item.id === replyId)
+      if (message) message.loading = false
+      streamAbortController = null
+      activeRunId.value = null
+      activeReplyId.value = null
+      sending.value = false
       await nextTick()
       scrollToBottom()
     }
@@ -338,9 +414,10 @@ const onHistoryIntersect = (isIntersecting: boolean) => {
 }
 
 const selectConversation = async (id: string) => {
-  if (busy.value) return
+  if (conversationSelectionDisabled.value) return
   drawerOpen.value = false
   if (id === currentConversationId.value) return
+  stopActiveStream()
   currentConversationId.value = id
   currentMessages.value = []
   await loadMessages()
@@ -389,6 +466,7 @@ const clearContext = async () => {
   const conversation = currentConversation.value
   if (!conversation || creatingThread.value) return
   creatingThread.value = true
+  stopActiveStream()
   try {
     const thread = await chatApi.createThread(conversation.name)
     conversation.thread_id = thread.thread_id
@@ -421,28 +499,31 @@ const sendMessage = async () => {
   const nowIso = new Date().toISOString()
   currentMessages.value.push({ id: crypto.randomUUID(), role: 'user', content, createdAt: nowIso })
   inputMessage.value = ''
-  const replyId = crypto.randomUUID()
+  let replyId: string = crypto.randomUUID()
   currentMessages.value.push({ id: replyId, role: 'assistant', content: '', createdAt: nowIso, loading: true })
   await nextTick()
   scrollToBottom()
   try {
-    await chatApi.sendMessage(
-      { content, agentId: currentConversationId.value, threadId: currentConversation.value.thread_id },
-      (chunk: string) => {
-        const msg = currentMessages.value.find(m => m.id === replyId)
-        if (msg) {
-          msg.content += chunk
-          nextTick(scrollToBottom)
-        }
-      },
-    )
+    const threadId = currentConversation.value.thread_id
+    const run = await chatApi.sendMessage({ content, agentId: currentConversationId.value, threadId })
+    if (currentConversation.value?.thread_id !== threadId || run.thread_id !== threadId) {
+      const idx = currentMessages.value.findIndex(message => message.id === replyId)
+      if (idx >= 0 && !currentMessages.value[idx]?.content) currentMessages.value.splice(idx, 1)
+      sending.value = false
+      return
+    }
+    const reply = currentMessages.value.find(message => message.id === replyId)
+    if (!reply) {
+      sending.value = false
+      return
+    }
+    replyId = `run:${run.run_id}`
+    reply.id = replyId
+    void streamActiveRun(run.run_id, replyId, threadId)
   } catch (error) {
     const idx = currentMessages.value.findIndex(m => m.id === replyId)
     if (idx >= 0 && !currentMessages.value[idx]?.content) currentMessages.value.splice(idx, 1)
     if (!handleUnauthorized(error)) showError('回复未能完成，请稍后重新发送。')
-  } finally {
-    const msg = currentMessages.value.find(m => m.id === replyId)
-    if (msg) msg.loading = false
     sending.value = false
     await nextTick()
     scrollToBottom()
@@ -452,6 +533,7 @@ onMounted(async () => {
   await loadConversations()
   await loadMessages()
 })
+onBeforeUnmount(stopActiveStream)
 </script>
 
 <style scoped>

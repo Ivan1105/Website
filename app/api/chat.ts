@@ -24,9 +24,15 @@ export interface MessagePaginationDTO {
   has_more: boolean
 }
 
+export interface ActiveRunDTO {
+  run_id: string
+  status: 'running'
+  started_at: string
+}
+
 export interface QueryMessagesDTO {
   messages: MessageDTO[]
-  active_run: unknown | null
+  active_run: ActiveRunDTO | null
   pagination: MessagePaginationDTO
 }
 
@@ -34,6 +40,12 @@ export interface SendMessageReq {
   content: string
   agentId: string
   threadId: string
+}
+
+export interface SendMessageDTO {
+  thread_id: string
+  run_id: string
+  status: 'running'
 }
 
 export interface UpdateProactiveReq {
@@ -96,28 +108,30 @@ export const useChatApi = () => {
       unwrap(resp)
     },
 
-    /**
-     * 流式发送消息，通过 onChunk 回调逐步返回内容
-     */
-    async sendMessage(
-      data: SendMessageReq,
-      onChunk: (chunk: string) => void,
-    ): Promise<void> {
+    async sendMessage(data: SendMessageReq): Promise<SendMessageDTO> {
+      const resp = await $api<SendMessageDTO | Envelope<SendMessageDTO>>('/chatbox/sendMessage', {
+        method: 'POST',
+        body: data,
+      })
+      return unwrap(resp)
+    },
+
+    async streamRun(runId: string, onChunk: (chunk: string) => void, signal?: AbortSignal): Promise<void> {
       const runtimeConfig = useRuntimeConfig()
       const baseURL = runtimeConfig.public.apiUrl ?? ''
 
       const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
+        Accept: 'text/event-stream',
       }
       const token = getToken()
       if (token) {
         headers.Authorization = `Bearer ${token}`
       }
 
-      const resp = await fetch(`${baseURL}/chatbox/sendMessage`, {
-        method: 'POST',
+      const resp = await fetch(`${baseURL}/chatbox/runs/${encodeURIComponent(runId)}/stream`, {
+        method: 'GET',
         headers,
-        body: JSON.stringify({ content: data.content, agentId: data.agentId, threadId: data.threadId }),
+        signal,
       })
 
       if (!resp.ok) {
@@ -140,23 +154,41 @@ export const useChatApi = () => {
       const reader = resp.body.getReader()
       const decoder = new TextDecoder()
       let buffer = ''
+      let eventName = ''
       let eventData: string[] = []
+      let streamDone = false
 
       const dispatchEvent = () => {
-        if (eventData.length === 0) return
+        const currentEventName = eventName
         const chunk = eventData.join('\n')
+        eventName = ''
         eventData = []
 
-        if (!chunk || chunk === '[DONE]') return
+        if (currentEventName !== 'text' && currentEventName !== 'done') return
+
+        let payload: unknown
         try {
-          const evt = JSON.parse(chunk) as { type: string, content?: string }
-          if (evt.type === 'text' && evt.content != null) {
-            onChunk(evt.content)
-          }
-          // type: done / 其他类型忽略
+          payload = JSON.parse(chunk)
         } catch {
-          // 兼容纯文本格式
-          onChunk(chunk)
+          throw new ApiError('回复流数据格式错误', resp.status, chunk)
+        }
+
+        if (!payload || typeof payload !== 'object') {
+          throw new ApiError('回复流数据格式错误', resp.status, payload)
+        }
+
+        const event = payload as Record<string, unknown>
+        if (typeof event.run_id !== 'string' || event.run_id !== runId) {
+          throw new ApiError('回复流运行标识不匹配', resp.status, payload)
+        }
+
+        if (currentEventName === 'text') {
+          if (typeof event.content !== 'string') {
+            throw new ApiError('回复流文本内容格式错误', resp.status, payload)
+          }
+          onChunk(event.content)
+        } else {
+          streamDone = true
         }
       }
 
@@ -165,8 +197,13 @@ export const useChatApi = () => {
         // 去除 CRLF 的 \r
         if (line.endsWith('\r')) line = line.slice(0, -1)
 
-        // 跳过 SSE 控制行（event/id/retry/comment）
-        if (/^(event|id|retry):/i.test(line) || line.startsWith(':')) return
+        if (line.startsWith('event:')) {
+          eventName = line.slice(6)
+          if (eventName.startsWith(' ')) eventName = eventName.slice(1)
+          return
+        }
+        // 跳过其余 SSE 控制行（id/retry/comment）
+        if (/^(id|retry):/i.test(line) || line.startsWith(':')) return
         // 空行表示当前 SSE 事件结束
         if (line === '') {
           dispatchEvent()
@@ -178,13 +215,10 @@ export const useChatApi = () => {
           // SSE 规范：data: 后有一个可选空格
           if (chunk.startsWith(' ')) chunk = chunk.slice(1)
           eventData.push(chunk)
-        } else {
-          // 兼容非 SSE 的纯文本流
-          onChunk(line)
         }
       }
 
-      for (; ;) {
+      for (; !streamDone;) {
         const { done, value } = await reader.read()
         if (done) break
         buffer += decoder.decode(value, { stream: true })
@@ -193,7 +227,15 @@ export const useChatApi = () => {
         const parts = buffer.split('\n')
         buffer = parts.pop() || ''
 
-        for (const part of parts) processLine(part)
+        for (const part of parts) {
+          processLine(part)
+          if (streamDone) break
+        }
+      }
+
+      if (streamDone) {
+        await reader.cancel()
+        return
       }
 
       // 解码并处理最后一条未以换行符结尾的数据
