@@ -57,6 +57,23 @@
             <template #error><div class="profile-banner-fallback" /></template>
           </v-img>
           <div v-else class="profile-banner-fallback" />
+          <v-btn
+            class="banner-edit-button"
+            icon="mdi-camera-outline"
+            :loading="bannerSaving"
+            :disabled="bannerSaving"
+            aria-label="修改背景图"
+            title="修改背景图"
+            @click="openBannerFilePicker"
+          />
+          <input
+            ref="banner-file-input"
+            class="sr-only"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            tabindex="-1"
+            @change="handleBannerFileChange"
+          >
         </div>
 
         <div class="profile-content">
@@ -86,7 +103,17 @@
             </div>
 
             <div class="profile-identity">
-              <p class="eyebrow">CURRENT ACCOUNT</p>
+              <div class="profile-meta-row">
+                <p class="eyebrow">CURRENT ACCOUNT</p>
+                <v-chip
+                  v-if="appStore.userInfo?.role === 'admin'"
+                  color="primary"
+                  size="x-small"
+                  variant="tonal"
+                >
+                  管理员
+                </v-chip>
+              </div>
               <div class="profile-name-row">
                 <h2>{{ displayName }}</h2>
                 <v-btn
@@ -101,17 +128,6 @@
               </div>
               <p class="profile-username">@{{ accountInfo.username }}</p>
             </div>
-
-            <v-btn
-              class="profile-refresh"
-              variant="text"
-              color="secondary"
-              icon="mdi-refresh"
-              :loading="accountLoading"
-              aria-label="重新加载账户资料"
-              title="重新加载账户资料"
-              @click="loadAccountInfo"
-            />
           </div>
 
           <div class="profile-signature">
@@ -352,8 +368,8 @@
     <v-snackbar v-model="updateSuccess" color="success" location="bottom" :timeout="2500">
       {{ updateSuccessText }}
     </v-snackbar>
-    <v-snackbar v-model="avatarNotice" color="error" location="bottom" :timeout="3500">
-      {{ avatarNoticeText }}
+    <v-snackbar v-model="imageNotice" color="error" location="bottom" :timeout="3500">
+      {{ imageNoticeText }}
     </v-snackbar>
   </div>
 </template>
@@ -365,6 +381,8 @@ import { useAppStore } from '@/stores/app'
 
 const ACCOUNT_INFO_ERROR = '暂时无法加载账户资料，请稍后重试。'
 const UPDATE_ACCOUNT_ERROR = '暂时无法修改账户资料，请稍后重试。'
+const MAX_IMAGE_UPLOAD_SIZE = 10 * 1024 * 1024
+const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp'])
 
 type EditableField = 'nickname' | 'email' | 'signature'
 type PasswordField = 'currentPassword' | 'password' | 'confirmPassword'
@@ -433,8 +451,10 @@ const avatarSourceUrl = ref('')
 const avatarSaving = ref(false)
 const avatarError = ref<string | null>(null)
 const pendingAvatarPath = ref<string | null>(null)
-const avatarNotice = ref(false)
-const avatarNoticeText = ref('')
+const bannerFileInput = useTemplateRef<HTMLInputElement>('banner-file-input')
+const bannerSaving = ref(false)
+const imageNotice = ref(false)
+const imageNoticeText = ref('')
 
 const displayName = computed(() => accountInfo.value?.nickname || accountInfo.value?.username || '个人中心')
 const accountAvatarUrl = computed(() => assetUrl(accountInfo.value?.avatar, 'icon'))
@@ -609,9 +629,9 @@ const resetAvatarCrop = () => {
   avatarError.value = null
 }
 
-const showAvatarNotice = (message: string) => {
-  avatarNoticeText.value = message
-  avatarNotice.value = true
+const showImageNotice = (message: string) => {
+  imageNoticeText.value = message
+  imageNotice.value = true
 }
 
 const openAvatarFilePicker = () => {
@@ -628,15 +648,71 @@ const handleAvatarFileChange = (event: Event) => {
   input.value = ''
   if (!file) return
 
-  const allowedTypes = new Set(['image/jpeg', 'image/png', 'image/webp'])
-  if (!allowedTypes.has(file.type)) {
-    showAvatarNotice('请选择 JPEG、PNG 或 WebP 图片。')
+  if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
+    showImageNotice('请选择 JPEG、PNG 或 WebP 图片。')
     return
   }
 
   resetAvatarCrop()
   avatarSourceUrl.value = URL.createObjectURL(file)
   avatarCropOpen.value = true
+}
+
+const openBannerFilePicker = () => {
+  if (bannerSaving.value) return
+  if (bannerFileInput.value) {
+    bannerFileInput.value.value = ''
+    bannerFileInput.value.click()
+  }
+}
+
+const handleBannerFileChange = async (event: Event) => {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  input.value = ''
+  if (!file) return
+
+  if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
+    showImageNotice('请选择 JPEG、PNG 或 WebP 图片。')
+    return
+  }
+
+  if (file.size > MAX_IMAGE_UPLOAD_SIZE) {
+    showImageNotice('图片大小不能超过 10 MB。')
+    return
+  }
+
+  if (!accountInfo.value || !appStore.token || bannerSaving.value) return
+
+  const requestedToken = appStore.token
+  bannerSaving.value = true
+
+  try {
+    const upload = await commonApi.uploadImage(file, 'banner')
+    if (appStore.token !== requestedToken) return
+
+    const info = await accountApi.updateAccountInfo({ banner: upload.path })
+    if (appStore.token !== requestedToken) return
+
+    accountInfo.value = info
+    updateSuccessText.value = '背景图修改成功'
+    updateSuccess.value = true
+  }
+  catch (error) {
+    if (appStore.token !== requestedToken) return
+
+    if (isApiError(error) && error.status === 401) {
+      appStore.clearAuth()
+      accountInfo.value = null
+      return
+    }
+
+    showImageNotice(isApiError(error) ? error.message : '背景图保存失败，请重试。')
+    console.warn('[account] updateBanner failed', error)
+  }
+  finally {
+    bannerSaving.value = false
+  }
 }
 
 const saveAvatar = async (file: Blob) => {
@@ -869,6 +945,7 @@ const handleLogout = async () => {
 }
 
 .profile-banner {
+  position: relative;
   height: 210px;
   background: var(--site-soft);
 }
@@ -883,13 +960,52 @@ const handleLogout = async () => {
   background: linear-gradient(135deg, var(--site-soft), #d5efeb 58%, #c5e8e2);
 }
 
+.banner-edit-button {
+  position: absolute !important;
+  top: 0;
+  right: 0;
+  z-index: 2;
+  width: 64px !important;
+  height: 64px !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  background: rgb(var(--v-theme-primary)) !important;
+  box-shadow: none !important;
+  color: #fff !important;
+  clip-path: polygon(0 0, 100% 0, 100% 100%);
+  filter: drop-shadow(-4px 5px 6px rgb(9 36 32 / 32%));
+  transition: filter 160ms ease, background-color 160ms ease;
+}
+
+.banner-edit-button:hover {
+  filter: drop-shadow(-5px 6px 7px rgb(9 36 32 / 42%));
+}
+
+.banner-edit-button:focus-visible {
+  filter:
+    drop-shadow(-4px 5px 6px rgb(9 36 32 / 32%))
+    drop-shadow(-2px 2px 2px rgb(var(--v-theme-primary) / 55%));
+}
+
+.banner-edit-button :deep(.v-btn__content),
+.banner-edit-button :deep(.v-btn__loader) {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+}
+
 .profile-content {
   padding: 0 clamp(24px, 5vw, 44px) clamp(24px, 5vw, 44px);
 }
 
 .profile-summary {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: end;
   gap: var(--site-space-3);
 }
@@ -934,15 +1050,28 @@ const handleLogout = async () => {
   padding-top: 20px;
 }
 
+.profile-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.profile-meta-row .eyebrow {
+  margin: 0;
+}
+
 .profile-name-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
+  margin-top: 4px;
 }
 
 .profile-identity h2 {
   min-width: 0;
-  margin: 4px 0 0;
+  margin: 0;
   color: var(--site-text);
   font-size: clamp(1.5rem, 3vw, 2rem);
   line-height: 1.25;
@@ -950,18 +1079,15 @@ const handleLogout = async () => {
 }
 
 .profile-username {
+  min-width: 0;
   margin-top: 4px;
   color: var(--site-muted);
   overflow-wrap: anywhere;
 }
 
-.profile-refresh {
-  margin-bottom: 4px;
-}
-
 .profile-signature {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: var(--site-space-2);
   margin-top: var(--site-space-3);
@@ -1116,6 +1242,17 @@ const handleLogout = async () => {
     height: 150px;
   }
 
+  .banner-edit-button {
+    width: 52px !important;
+    height: 52px !important;
+  }
+
+  .banner-edit-button :deep(.v-btn__content),
+  .banner-edit-button :deep(.v-btn__loader) {
+    top: 5px;
+    right: 5px;
+  }
+
   .profile-content {
     padding-inline: 20px;
   }
@@ -1134,17 +1271,6 @@ const handleLogout = async () => {
 
   .profile-identity {
     padding-top: 14px;
-  }
-
-  .profile-name-row {
-    align-items: flex-start;
-  }
-
-  .profile-refresh {
-    grid-column: 2;
-    justify-self: start;
-    margin-top: -4px;
-    margin-left: -12px;
   }
 
   .account-warning {

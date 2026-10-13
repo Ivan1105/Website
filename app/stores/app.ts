@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import type { UserRole } from '@/api/user'
 
 const TOKEN_KEY = 'token'
 const USER_INFO_KEY = 'userInfo'
@@ -8,6 +9,7 @@ export interface UserInfo {
   user_id: number
   nickname: string | null
   avatar?: string | null
+  role: UserRole
 }
 
 const isUserInfo = (value: unknown): value is UserInfo => {
@@ -17,6 +19,7 @@ const isUserInfo = (value: unknown): value is UserInfo => {
     && typeof info.user_id === 'number'
     && (typeof info.nickname === 'string' || info.nickname === null)
     && (info.avatar === undefined || info.avatar === null || typeof info.avatar === 'string')
+    && (info.role === 'admin' || info.role === 'user')
 }
 
 export const useAppStore = defineStore('app', {

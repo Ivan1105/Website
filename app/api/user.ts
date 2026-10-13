@@ -11,11 +11,14 @@ export interface LoginResp {
   message?: string
 }
 
+export type UserRole = 'admin' | 'user'
+
 export interface UserInfoDTO {
   username: string
   user_id: number
   nickname: string | null
   avatar?: string | null
+  role: UserRole
 }
 
 export const useUserApi = () => {
@@ -40,7 +43,7 @@ export const useUserApi = () => {
 
     /**
      * 获取当前用户信息：GET /userinfo/queryUserInfo
-     * 返回 { username, user_id, nickname, avatar? } | null（未登录时为 null）
+     * 返回 { username, user_id, nickname, avatar?, role } | null（未登录时为 null）
      */
     async queryUserInfo(): Promise<UserInfoDTO | null> {
       const resp = await $api<UserInfoDTO | null | Envelope<UserInfoDTO | null>>('/userinfo/queryUserInfo', {

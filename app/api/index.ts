@@ -16,10 +16,10 @@ export type {
 } from './chat'
 
 export { useCommonApi } from './common'
-export type { UploadImageDTO } from './common'
+export type { ImageUploadModule, UploadImageDTO } from './common'
 
 export { useAccountApi } from './account'
 export type { AccountInfoDTO, UpdateAccountInfoReq } from './account'
 
 export { useUserApi } from './user'
-export type { LoginReq, LoginResp, UserInfoDTO } from './user'
+export type { LoginReq, LoginResp, UserInfoDTO, UserRole } from './user'
