@@ -1,7 +1,16 @@
 export { ApiError, isApiError } from './http'
 
 export { useChatApi } from './chat'
-export type { ConversationDTO, CreateThreadDTO, MessageDTO, SendMessageReq, UpdateJournalReq, UpdateProactiveReq } from './chat'
+export type {
+  ConversationDTO,
+  CreateThreadDTO,
+  MessageDTO,
+  MessagePaginationDTO,
+  QueryMessagesDTO,
+  SendMessageReq,
+  UpdateJournalReq,
+  UpdateProactiveReq,
+} from './chat'
 
 export { useCommonApi } from './common'
 export type { UploadImageDTO } from './common'

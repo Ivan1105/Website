@@ -17,6 +17,19 @@ export interface MessageDTO {
   createdAt: string
 }
 
+export interface MessagePaginationDTO {
+  page: number
+  page_size: number
+  total: number
+  has_more: boolean
+}
+
+export interface QueryMessagesDTO {
+  messages: MessageDTO[]
+  active_run: unknown | null
+  pagination: MessagePaginationDTO
+}
+
 export interface SendMessageReq {
   content: string
   agentId: string
@@ -48,9 +61,13 @@ export const useChatApi = () => {
       return unwrap(resp)
     },
 
-    async getMessages(threadId: string): Promise<MessageDTO[]> {
-      const resp = await $api<MessageDTO[] | Envelope<MessageDTO[]>>(`/chatbox/queryMessages/${encodeURIComponent(threadId)}`, {
+    async getMessages(threadId: string, page = 0, pageSize = 20): Promise<QueryMessagesDTO> {
+      const resp = await $api<QueryMessagesDTO | Envelope<QueryMessagesDTO>>(`/chatbox/queryMessages/${encodeURIComponent(threadId)}`, {
         method: 'GET',
+        query: {
+          page,
+          page_size: pageSize,
+        },
       })
       return unwrap(resp)
     },

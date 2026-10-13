@@ -91,6 +91,19 @@
             <p class="eyebrow">A LITTLE INSPIRATION</p><h3>今天，想聊些什么？</h3><p>分享一个想法，或提出你的第一个问题。</p>
           </div>
           <template v-else>
+            <div v-if="messagesHasMore || loadingMore" v-intersect="onHistoryIntersect" class="history-loader"
+              role="status" :aria-label="historyLoaderLabel">
+              <template v-if="loadingMore">
+                <v-progress-circular indeterminate color="secondary" size="18" width="2" />
+                <span>正在加载更早的消息…</span>
+              </template>
+              <v-btn v-else-if="historyLoadError" variant="text" color="secondary" size="small"
+                prepend-icon="mdi-refresh" @click="loadOlderMessages">加载失败，点击重试</v-btn>
+              <template v-else>
+                <v-icon icon="mdi-history" size="18" />
+                <span>继续向上查看更早的消息</span>
+              </template>
+            </div>
             <article v-for="msg in currentMessages" :key="msg.id" class="message-row" :class="{ 'message-self': msg.role === 'user' }" :aria-label="msg.role === 'user' ? '我的消息' : '回复'">
               <v-avatar color="surface-variant" size="32" class="message-avatar" aria-hidden="true">
                 <v-img v-if="msg.role === 'user' && appStore.userInfo?.avatar" :src="assetUrl(appStore.userInfo.avatar)" alt="" cover>
@@ -180,6 +193,11 @@ const messagesError = ref('')
 const authRequired = ref(false)
 const authErrorMessage = '需要登录，或登录状态已失效，请重新登录。'
 const sending = ref(false)
+const loadingMore = ref(false)
+const historyLoadError = ref(false)
+const messagesPage = ref(0)
+const messagesHasMore = ref(false)
+const messagesTotal = ref(0)
 const creatingThread = ref(false)
 const clearContextDialogOpen = ref(false)
 const settingsMenuOpen = ref(false)
@@ -193,6 +211,9 @@ const showError = (text: string) => {
 }
 const currentConversation = computed(() => conversations.value.find(c => c.name === currentConversationId.value))
 const busy = computed(() => authRequired.value || sending.value || creatingThread.value || loading.value || conversationsLoading.value)
+const historyLoaderLabel = computed(() => `加载更早的消息，当前已显示 ${currentMessages.value.length} 条，共 ${messagesTotal.value} 条`)
+const MESSAGES_PAGE_SIZE = 20
+let messagesLoadVersion = 0
 watch(mobile, value => {
   if (!value) drawerOpen.value = false
 })
@@ -207,6 +228,14 @@ const formatTime = (value: string) => {
 }
 const scrollToBottom = () => {
   if (messagesAreaRef.value) messagesAreaRef.value.scrollTop = messagesAreaRef.value.scrollHeight
+}
+const resetMessagesPagination = () => {
+  messagesLoadVersion += 1
+  messagesPage.value = 0
+  messagesHasMore.value = false
+  messagesTotal.value = 0
+  loadingMore.value = false
+  historyLoadError.value = false
 }
 const handleUnauthorized = (error: unknown) => {
   if (!isApiError(error) || error.status !== 401) return false
@@ -235,18 +264,77 @@ const loadConversations = async () => {
 const loadMessages = async () => {
   const threadId = currentConversation.value?.thread_id
   if (!threadId) return
+  resetMessagesPagination()
+  const loadVersion = messagesLoadVersion
   loading.value = true
   messagesError.value = ''
   currentMessages.value = []
   try {
-    currentMessages.value = await chatApi.getMessages(threadId)
+    const result = await chatApi.getMessages(threadId, 0, MESSAGES_PAGE_SIZE)
+    if (loadVersion !== messagesLoadVersion || currentConversation.value?.thread_id !== threadId) return
+    currentMessages.value = [...result.messages].reverse()
+    messagesPage.value = result.pagination.page
+    messagesHasMore.value = result.pagination.has_more
+    messagesTotal.value = result.pagination.total
   } catch (error) {
-    if (!handleUnauthorized(error)) messagesError.value = '消息加载失败。'
+    if (loadVersion === messagesLoadVersion && !handleUnauthorized(error)) messagesError.value = '消息加载失败。'
   } finally {
-    loading.value = false
-    await nextTick()
-    scrollToBottom()
+    if (loadVersion === messagesLoadVersion) {
+      loading.value = false
+      await nextTick()
+      scrollToBottom()
+    }
   }
+}
+
+const loadOlderMessages = async () => {
+  const threadId = currentConversation.value?.thread_id
+  if (!threadId || authRequired.value || loading.value || loadingMore.value || !messagesHasMore.value) return
+
+  const loadVersion = messagesLoadVersion
+  const nextPage = messagesPage.value + 1
+  const messagesArea = messagesAreaRef.value
+  const previousScrollHeight = messagesArea?.scrollHeight ?? 0
+  const previousScrollTop = messagesArea?.scrollTop ?? 0
+  loadingMore.value = true
+  historyLoadError.value = false
+  let loadedPage = false
+
+  try {
+    const result = await chatApi.getMessages(threadId, nextPage, MESSAGES_PAGE_SIZE)
+    if (loadVersion !== messagesLoadVersion || currentConversation.value?.thread_id !== threadId) return
+
+    const existingIds = new Set(currentMessages.value.map(message => message.id))
+    const olderMessages = [...result.messages].reverse().filter(message => !existingIds.has(message.id))
+    currentMessages.value = [...olderMessages, ...currentMessages.value]
+    messagesPage.value = result.pagination.page
+    messagesHasMore.value = result.pagination.has_more
+    messagesTotal.value = result.pagination.total
+    loadedPage = true
+
+    await nextTick()
+    if (messagesArea && messagesAreaRef.value === messagesArea) {
+      messagesArea.scrollTop = messagesArea.scrollHeight - previousScrollHeight + previousScrollTop
+    }
+  } catch (error) {
+    if (loadVersion === messagesLoadVersion && !handleUnauthorized(error)) {
+      historyLoadError.value = true
+      showError('更早的消息加载失败，请稍后重试。')
+    }
+  } finally {
+    if (loadVersion === messagesLoadVersion) {
+      loadingMore.value = false
+      await nextTick()
+      const area = messagesAreaRef.value
+      if (loadedPage && messagesHasMore.value && area && area.scrollHeight <= area.clientHeight + 1) {
+        void loadOlderMessages()
+      }
+    }
+  }
+}
+
+const onHistoryIntersect = (isIntersecting: boolean) => {
+  if (isIntersecting && !historyLoadError.value) void loadOlderMessages()
 }
 
 const selectConversation = async (id: string) => {
@@ -304,6 +392,7 @@ const clearContext = async () => {
   try {
     const thread = await chatApi.createThread(conversation.name)
     conversation.thread_id = thread.thread_id
+    resetMessagesPagination()
     currentMessages.value = []
     messagesError.value = ''
     clearContextDialogOpen.value = false
@@ -626,6 +715,17 @@ onMounted(async () => {
   gap: 10px;
   font-size: 0.85rem;
   color: var(--site-muted);
+}
+
+.history-loader {
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--site-space-1);
+  flex-shrink: 0;
+  color: var(--site-muted);
+  font-size: 0.72rem;
 }
 
 .markdown-content {
