@@ -104,7 +104,7 @@
                 <span>继续向上查看更早的消息</span>
               </template>
             </div>
-            <article v-for="msg in currentMessages" :key="msg.id" class="message-row"
+            <article v-for="msg in currentMessages" :key="msg.key" class="message-row"
               :class="{ 'message-self': msg.role === 'user', 'message-signal': msg.role === 'signal' || msg.role === 'stream-error' }"
               :aria-label="msg.role === 'user' ? '我的消息' : msg.role === 'signal' ? '系统提醒' : msg.role === 'stream-error' ? '回复错误' : '回复'">
               <div v-if="msg.role === 'signal'" class="signal-message">
@@ -138,7 +138,7 @@
                       <div v-if="msg.toolCalls?.length" class="tool-status-list" aria-live="polite">
                         <div v-for="toolCall in msg.toolCalls" :key="toolCall.id" class="tool-status"
                           :class="`tool-status-${toolCall.status}`" role="status"
-                          @animationend="removeCompletedToolCall($event, msg.id, toolCall.id, toolCall.status)">
+                          @animationend="removeCompletedToolCall($event, msg.key, toolCall.id, toolCall.status)">
                           <v-progress-circular v-if="toolCall.status === 'running'" indeterminate size="16" width="2" color="secondary" />
                           <v-icon v-else-if="toolCall.status === 'success'" icon="mdi-check-circle-outline" color="success" size="18" />
                           <v-icon v-else icon="mdi-alert-circle-outline" color="error" size="18" />
@@ -200,11 +200,17 @@ interface ToolCallState {
   name: string
   status: ToolCallStatus
 }
-type Message = Omit<MessageDTO, 'role'> & {
+type Message = Omit<MessageDTO, 'id' | 'role'> & {
+  key: string
+  id?: string
   role: MessageDTO['role'] | 'stream-error'
   loading?: boolean
   toolCalls?: ToolCallState[]
 }
+const toHistoryMessage = (message: MessageDTO | ActiveRunDTO['user_message']): Message => ({
+  ...message,
+  key: `history:${message.id}`,
+})
 const markdown = new MarkdownIt({ html: false, linkify: true, breaks: true })
 const renderedMessageCache = new WeakMap<Message, { content: string, html: string }>()
 const renderAssistantMessage = (message: Message) => {
@@ -233,7 +239,6 @@ const messagesPage = ref(0)
 const messagesHasMore = ref(false)
 const messagesTotal = ref(0)
 const activeRunId = ref<string | null>(null)
-const activeReplyId = ref<string | null>(null)
 const creatingThread = ref(false)
 const clearContextDialogOpen = ref(false)
 const settingsMenuOpen = ref(false)
@@ -253,7 +258,7 @@ const MESSAGES_PAGE_SIZE = 20
 let messagesLoadVersion = 0
 let streamVersion = 0
 let streamAbortController: AbortController | null = null
-const activeStreamMessageIds = new Set<string>()
+const activeStreamMessageKeys = new Set<string>()
 watch(mobile, value => {
   if (!value) drawerOpen.value = false
 })
@@ -273,10 +278,10 @@ const toolCallLabel = (toolCall: ToolCallState) => {
   if (toolCall.status === 'running') return `开始工具调用【${toolCall.name}】`
   return `工具请求${toolCall.status === 'success' ? '成功' : '失败'}【${toolCall.name}】`
 }
-const removeCompletedToolCall = (event: AnimationEvent, messageId: string, toolCallId: string, status: ToolCallStatus) => {
+const removeCompletedToolCall = (event: AnimationEvent, messageKey: string, toolCallId: string, status: ToolCallStatus) => {
   if (event.target !== event.currentTarget) return
   if (status === 'running') return
-  const message = currentMessages.value.find(item => item.id === messageId)
+  const message = currentMessages.value.find(item => item.key === messageKey)
   const toolCall = message?.toolCalls?.find(item => item.id === toolCallId)
   if (!message || !toolCall || toolCall.status !== status) return
   message.toolCalls = message.toolCalls?.filter(item => item.id !== toolCallId)
@@ -285,16 +290,15 @@ const stopActiveStream = () => {
   streamVersion += 1
   streamAbortController?.abort()
   streamAbortController = null
-  for (const messageId of activeStreamMessageIds) {
-    const message = currentMessages.value.find(item => item.id === messageId)
+  for (const messageKey of activeStreamMessageKeys) {
+    const message = currentMessages.value.find(item => item.key === messageKey)
     if (message) {
       message.loading = false
       message.toolCalls = []
     }
   }
-  activeStreamMessageIds.clear()
+  activeStreamMessageKeys.clear()
   activeRunId.value = null
-  activeReplyId.value = null
   sending.value = false
 }
 const resetMessagesPagination = () => {
@@ -342,7 +346,7 @@ const loadMessages = async () => {
   try {
     const result = await chatApi.getMessages(threadId, 0, MESSAGES_PAGE_SIZE)
     if (loadVersion !== messagesLoadVersion || currentConversation.value?.thread_id !== threadId) return
-    currentMessages.value = [...result.messages].reverse()
+    currentMessages.value = result.messages.map(toHistoryMessage)
     messagesPage.value = result.pagination.page
     messagesHasMore.value = result.pagination.has_more
     messagesTotal.value = result.pagination.total
@@ -350,10 +354,10 @@ const loadMessages = async () => {
     if (activeRun) {
       const userMessage = activeRun.user_message
       if (!currentMessages.value.some(message => message.id === userMessage.id)) {
-        currentMessages.value.push(userMessage)
+        currentMessages.value.push(toHistoryMessage(userMessage))
       }
       currentMessages.value.push({
-        id: `run:${activeRun.run_id}`,
+        key: `run:${activeRun.run_id}:placeholder`,
         role: 'assistant',
         content: '',
         createdAt: activeRun.started_at,
@@ -370,11 +374,11 @@ const loadMessages = async () => {
     }
   }
   if (activeRun && loadVersion === messagesLoadVersion && currentConversation.value?.thread_id === threadId) {
-    void streamActiveRun(activeRun.run_id, `run:${activeRun.run_id}`, threadId)
+    void streamActiveRun(activeRun.run_id, `run:${activeRun.run_id}:placeholder`, threadId)
   }
 }
 
-const streamActiveRun = async (runId: string, replyId: string, threadId: string) => {
+const streamActiveRun = async (runId: string, replyKey: string, threadId: string) => {
   if (activeRunId.value === runId && streamAbortController) return
 
   stopActiveStream()
@@ -382,10 +386,9 @@ const streamActiveRun = async (runId: string, replyId: string, threadId: string)
   const currentStreamVersion = streamVersion
   streamAbortController = controller
   activeRunId.value = runId
-  activeReplyId.value = replyId
   sending.value = true
 
-  const placeholder = currentMessages.value.find(message => message.id === replyId)
+  const placeholder = currentMessages.value.find(message => message.key === replyKey)
   if (!placeholder) {
     stopActiveStream()
     return
@@ -393,29 +396,34 @@ const streamActiveRun = async (runId: string, replyId: string, threadId: string)
   placeholder.content = ''
   placeholder.loading = true
   placeholder.toolCalls = []
-  activeStreamMessageIds.add(replyId)
+  activeStreamMessageKeys.add(replyKey)
 
-  const initializedMessageIds = new Set<string>()
+  const initializedMessageKeys = new Set<string>()
   let placeholderClaimed = false
+  let messageOrdinal = 0
+  let currentStreamMessageKey: string | null = null
+  let hasSeenMessageStart = false
 
-  const ensureStreamMessage = (messageId: string) => {
-    let message = currentMessages.value.find(item => item.id === messageId)
+  const ensureStreamMessage = (ordinal: number) => {
+    const messageKey = `run:${runId}:message:${ordinal}`
+    let message = currentMessages.value.find(item => item.key === messageKey)
 
     if (!placeholderClaimed) {
       placeholderClaimed = true
       if (message && message !== placeholder) {
         const placeholderIndex = currentMessages.value.indexOf(placeholder)
         if (placeholderIndex >= 0) currentMessages.value.splice(placeholderIndex, 1)
+        activeStreamMessageKeys.delete(placeholder.key)
       } else {
-        activeStreamMessageIds.delete(placeholder.id)
-        placeholder.id = messageId
+        activeStreamMessageKeys.delete(placeholder.key)
+        placeholder.key = messageKey
         message = placeholder
       }
     }
 
     if (!message) {
       message = {
-        id: messageId,
+        key: messageKey,
         role: 'assistant',
         content: '',
         createdAt: new Date().toISOString(),
@@ -425,23 +433,41 @@ const streamActiveRun = async (runId: string, replyId: string, threadId: string)
       currentMessages.value.push(message)
     }
 
-    if (!initializedMessageIds.has(messageId)) {
+    if (!initializedMessageKeys.has(messageKey)) {
       message.content = ''
       message.loading = true
       message.toolCalls = []
-      initializedMessageIds.add(messageId)
-      activeStreamMessageIds.add(messageId)
+      initializedMessageKeys.add(messageKey)
+      activeStreamMessageKeys.add(messageKey)
     }
 
     return message
   }
 
-  const activateMessage = (messageId: string) => {
-    const previousMessage = currentMessages.value.find(item => item.id === activeReplyId.value)
-    if (previousMessage && previousMessage.id !== messageId) previousMessage.loading = false
-    const message = ensureStreamMessage(messageId)
+  const ensureCurrentStreamMessage = () => {
+    if (currentStreamMessageKey) {
+      const currentMessage = currentMessages.value.find(item => item.key === currentStreamMessageKey)
+      if (currentMessage) return currentMessage
+    }
+
+    if (messageOrdinal === 0) messageOrdinal = 1
+    const message = ensureStreamMessage(messageOrdinal)
+    currentStreamMessageKey = message.key
+    return message
+  }
+
+  const activateNextMessage = () => {
+    const previousMessage = currentStreamMessageKey
+      ? currentMessages.value.find(item => item.key === currentStreamMessageKey)
+      : null
+    const reuseImplicitMessage = !hasSeenMessageStart && messageOrdinal === 1
+    if (!reuseImplicitMessage) messageOrdinal += 1
+    hasSeenMessageStart = true
+
+    const message = ensureStreamMessage(messageOrdinal)
+    if (previousMessage && previousMessage.key !== message.key) previousMessage.loading = false
     message.loading = true
-    activeReplyId.value = messageId
+    currentStreamMessageKey = message.key
     return message
   }
 
@@ -449,34 +475,32 @@ const streamActiveRun = async (runId: string, replyId: string, threadId: string)
     if (event.type === 'done') return
 
     if (event.type === 'error') {
-      const errorMessageId = `run:${runId}:error`
-      currentMessages.value = currentMessages.value.filter(message => !activeStreamMessageIds.has(message.id))
-      const existingError = currentMessages.value.find(message => message.id === errorMessageId)
+      const errorMessageKey = `run:${runId}:error`
+      currentMessages.value = currentMessages.value.filter(message => !activeStreamMessageKeys.has(message.key))
+      const existingError = currentMessages.value.find(message => message.key === errorMessageKey)
       if (existingError) {
         existingError.content = event.message
         existingError.createdAt = new Date().toISOString()
       } else {
         currentMessages.value.push({
-          id: errorMessageId,
+          key: errorMessageKey,
           role: 'stream-error',
           content: event.message,
           createdAt: new Date().toISOString(),
         })
       }
-      activeStreamMessageIds.clear()
-      activeReplyId.value = null
+      activeStreamMessageKeys.clear()
       nextTick(scrollToBottom)
       return
     }
 
     if (event.type === 'message_start') {
-      activateMessage(event.message_id)
+      activateNextMessage()
     } else if (event.type === 'text') {
-      const message = ensureStreamMessage(event.message_id)
-      if (!activeReplyId.value || activeReplyId.value === replyId) activeReplyId.value = event.message_id
+      const message = ensureCurrentStreamMessage()
       message.content += event.content
     } else if (event.type === 'tool_call') {
-      const message = ensureStreamMessage(event.message_id)
+      const message = ensureCurrentStreamMessage()
       const existingToolCall = message.toolCalls?.find(item => item.id === event.tool_call_id)
       if (existingToolCall) {
         existingToolCall.name = event.tool_name
@@ -485,7 +509,7 @@ const streamActiveRun = async (runId: string, replyId: string, threadId: string)
         message.toolCalls?.push({ id: event.tool_call_id, name: event.tool_name, status: 'running' })
       }
     } else if (event.type === 'tool_result') {
-      const message = ensureStreamMessage(event.message_id)
+      const message = ensureCurrentStreamMessage()
       const status: ToolCallStatus = event.is_error ? 'error' : 'success'
       const existingToolCall = message.toolCalls?.find(item => item.id === event.tool_call_id)
       if (existingToolCall) {
@@ -506,23 +530,22 @@ const streamActiveRun = async (runId: string, replyId: string, threadId: string)
   } catch (error) {
     if (currentStreamVersion === streamVersion && !controller.signal.aborted) {
       currentMessages.value = currentMessages.value.filter(message => (
-        !activeStreamMessageIds.has(message.id) || message.content.trim().length > 0
+        !activeStreamMessageKeys.has(message.key) || message.content.trim().length > 0
       ))
       if (!handleUnauthorized(error)) showError('回复连接中断，刷新页面可继续获取。')
     }
   } finally {
     if (currentStreamVersion === streamVersion) {
-      for (const messageId of activeStreamMessageIds) {
-        const message = currentMessages.value.find(item => item.id === messageId)
+      for (const messageKey of activeStreamMessageKeys) {
+        const message = currentMessages.value.find(item => item.key === messageKey)
         if (message) {
           message.loading = false
           message.toolCalls = message.toolCalls?.filter(toolCall => toolCall.status !== 'running')
         }
       }
-      activeStreamMessageIds.clear()
+      activeStreamMessageKeys.clear()
       streamAbortController = null
       activeRunId.value = null
-      activeReplyId.value = null
       sending.value = false
       await nextTick()
       scrollToBottom()
@@ -547,8 +570,10 @@ const loadOlderMessages = async () => {
     const result = await chatApi.getMessages(threadId, nextPage, MESSAGES_PAGE_SIZE)
     if (loadVersion !== messagesLoadVersion || currentConversation.value?.thread_id !== threadId) return
 
-    const existingIds = new Set(currentMessages.value.map(message => message.id))
-    const olderMessages = [...result.messages].reverse().filter(message => !existingIds.has(message.id))
+    const existingIds = new Set(currentMessages.value.flatMap(message => message.id ? [message.id] : []))
+    const olderMessages = result.messages
+      .filter(message => !existingIds.has(message.id))
+      .map(toHistoryMessage)
     currentMessages.value = [...olderMessages, ...currentMessages.value]
     messagesPage.value = result.pagination.page
     messagesHasMore.value = result.pagination.has_more
@@ -664,31 +689,31 @@ const sendMessage = async () => {
   sending.value = true
   messagesError.value = ''
   const nowIso = new Date().toISOString()
-  currentMessages.value.push({ id: crypto.randomUUID(), role: 'user', content, createdAt: nowIso })
+  currentMessages.value.push({ key: `local:user:${crypto.randomUUID()}`, role: 'user', content, createdAt: nowIso })
   inputMessage.value = ''
-  let replyId: string = crypto.randomUUID()
-  currentMessages.value.push({ id: replyId, role: 'assistant', content: '', createdAt: nowIso, loading: true })
+  let replyKey = `local:reply:${crypto.randomUUID()}`
+  currentMessages.value.push({ key: replyKey, role: 'assistant', content: '', createdAt: nowIso, loading: true })
   await nextTick()
   scrollToBottom()
   try {
     const threadId = currentConversation.value.thread_id
     const run = await chatApi.sendMessage({ content, agentId: currentConversationId.value, threadId })
     if (currentConversation.value?.thread_id !== threadId || run.thread_id !== threadId) {
-      const idx = currentMessages.value.findIndex(message => message.id === replyId)
+      const idx = currentMessages.value.findIndex(message => message.key === replyKey)
       if (idx >= 0 && !currentMessages.value[idx]?.content) currentMessages.value.splice(idx, 1)
       sending.value = false
       return
     }
-    const reply = currentMessages.value.find(message => message.id === replyId)
+    const reply = currentMessages.value.find(message => message.key === replyKey)
     if (!reply) {
       sending.value = false
       return
     }
-    replyId = `run:${run.run_id}`
-    reply.id = replyId
-    void streamActiveRun(run.run_id, replyId, threadId)
+    replyKey = `run:${run.run_id}:placeholder`
+    reply.key = replyKey
+    void streamActiveRun(run.run_id, replyKey, threadId)
   } catch (error) {
-    const idx = currentMessages.value.findIndex(m => m.id === replyId)
+    const idx = currentMessages.value.findIndex(message => message.key === replyKey)
     if (idx >= 0 && !currentMessages.value[idx]?.content) currentMessages.value.splice(idx, 1)
     if (!handleUnauthorized(error)) showError('回复未能完成，请稍后重新发送。')
     sending.value = false
