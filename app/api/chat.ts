@@ -297,7 +297,9 @@ export const useChatApi = () => {
             break
           case 'error': {
             const message = requireString(event, 'message', payload)
-            throw new ApiError(message, resp.status, payload)
+            onEvent({ type: currentEventName, run_id: eventRunId, message })
+            streamDone = true
+            break
           }
         }
       }

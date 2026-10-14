@@ -105,10 +105,15 @@
               </template>
             </div>
             <article v-for="msg in currentMessages" :key="msg.id" class="message-row"
-              :class="{ 'message-self': msg.role === 'user', 'message-signal': msg.role === 'signal' }"
-              :aria-label="msg.role === 'user' ? '我的消息' : msg.role === 'signal' ? '系统提醒' : '回复'">
+              :class="{ 'message-self': msg.role === 'user', 'message-signal': msg.role === 'signal' || msg.role === 'stream-error' }"
+              :aria-label="msg.role === 'user' ? '我的消息' : msg.role === 'signal' ? '系统提醒' : msg.role === 'stream-error' ? '回复错误' : '回复'">
               <div v-if="msg.role === 'signal'" class="signal-message">
                 <span>触发系统提醒</span>
+                <span aria-hidden="true">·</span>
+                <time :datetime="msg.createdAt">{{ formatTime(msg.createdAt) }}</time>
+              </div>
+              <div v-else-if="msg.role === 'stream-error'" class="signal-message stream-error-message">
+                <span>连接失败</span>
                 <span aria-hidden="true">·</span>
                 <time :datetime="msg.createdAt">{{ formatTime(msg.createdAt) }}</time>
               </div>
@@ -195,7 +200,8 @@ interface ToolCallState {
   name: string
   status: ToolCallStatus
 }
-interface Message extends MessageDTO {
+type Message = Omit<MessageDTO, 'role'> & {
+  role: MessageDTO['role'] | 'stream-error'
   loading?: boolean
   toolCalls?: ToolCallState[]
 }
@@ -440,7 +446,28 @@ const streamActiveRun = async (runId: string, replyId: string, threadId: string)
   }
 
   const handleStreamEvent = (event: ChatRunStreamEvent) => {
-    if (event.type === 'done' || event.type === 'error') return
+    if (event.type === 'done') return
+
+    if (event.type === 'error') {
+      const errorMessageId = `run:${runId}:error`
+      currentMessages.value = currentMessages.value.filter(message => !activeStreamMessageIds.has(message.id))
+      const existingError = currentMessages.value.find(message => message.id === errorMessageId)
+      if (existingError) {
+        existingError.content = event.message
+        existingError.createdAt = new Date().toISOString()
+      } else {
+        currentMessages.value.push({
+          id: errorMessageId,
+          role: 'stream-error',
+          content: event.message,
+          createdAt: new Date().toISOString(),
+        })
+      }
+      activeStreamMessageIds.clear()
+      activeReplyId.value = null
+      nextTick(scrollToBottom)
+      return
+    }
 
     if (event.type === 'message_start') {
       activateMessage(event.message_id)
@@ -478,6 +505,9 @@ const streamActiveRun = async (runId: string, replyId: string, threadId: string)
     }, controller.signal)
   } catch (error) {
     if (currentStreamVersion === streamVersion && !controller.signal.aborted) {
+      currentMessages.value = currentMessages.value.filter(message => (
+        !activeStreamMessageIds.has(message.id) || message.content.trim().length > 0
+      ))
       if (!handleUnauthorized(error)) showError('回复连接中断，刷新页面可继续获取。')
     }
   } finally {
@@ -879,11 +909,18 @@ onBeforeUnmount(stopActiveStream)
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-wrap: wrap;
   gap: 6px;
+  max-width: min(760px, 100%);
   color: var(--site-muted);
   font-size: 0.72rem;
   line-height: 1.5;
   text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.stream-error-message {
+  color: rgb(var(--v-theme-error));
 }
 
 .message-avatar {
