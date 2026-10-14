@@ -12,7 +12,7 @@ export interface ConversationDTO {
 
 export interface MessageDTO {
   id: string
-  role: 'user' | 'assistant'
+  role: 'user' | 'assistant' | 'signal'
   content: string
   createdAt: string
 }

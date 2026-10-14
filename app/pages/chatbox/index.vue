@@ -104,38 +104,47 @@
                 <span>继续向上查看更早的消息</span>
               </template>
             </div>
-            <article v-for="msg in currentMessages" :key="msg.id" class="message-row" :class="{ 'message-self': msg.role === 'user' }" :aria-label="msg.role === 'user' ? '我的消息' : '回复'">
-              <v-avatar color="surface-variant" size="32" class="message-avatar" aria-hidden="true">
-                <v-img v-if="msg.role === 'user' && appStore.userInfo?.avatar" :src="assetUrl(appStore.userInfo.avatar)" alt="" cover>
-                  <template #error><v-icon icon="mdi-account-outline" size="18" /></template>
-                </v-img>
-                <v-img v-else-if="msg.role !== 'user' && currentConversation?.avatar" :src="assetUrl(currentConversation.avatar)" alt="" cover>
-                  <template #error><v-icon icon="mdi-chat-outline" size="18" color="secondary" /></template>
-                </v-img>
-                <v-icon v-else :icon="msg.role === 'user' ? 'mdi-account-outline' : 'mdi-chat-outline'" size="18"
-                  :color="msg.role === 'user' ? undefined : 'secondary'" />
-              </v-avatar>
-              <div class="message-bubble-wrapper">
-                <span class="message-author">{{ msg.role === 'user' ? '我' : currentConversation?.display_name }}</span>
-                <div class="message-bubble" :class="msg.role === 'user' ? 'bubble-self' : 'bubble-other'">
-                  <div v-if="msg.loading && !msg.content && !msg.toolCalls?.length" class="reply-loading" role="status"><v-progress-circular indeterminate size="18" width="2" color="secondary" /> 正在回复…</div>
-                  <p v-else-if="msg.role === 'user'" class="message-text">{{ msg.content }}</p>
-                  <template v-else>
-                    <div v-if="msg.content" class="message-text markdown-content" v-html="renderAssistantMessage(msg)" />
-                    <div v-if="msg.toolCalls?.length" class="tool-status-list" aria-live="polite">
-                      <div v-for="toolCall in msg.toolCalls" :key="toolCall.id" class="tool-status"
-                        :class="`tool-status-${toolCall.status}`" role="status"
-                        @animationend="removeCompletedToolCall($event, msg.id, toolCall.id, toolCall.status)">
-                        <v-progress-circular v-if="toolCall.status === 'running'" indeterminate size="16" width="2" color="secondary" />
-                        <v-icon v-else-if="toolCall.status === 'success'" icon="mdi-check-circle-outline" color="success" size="18" />
-                        <v-icon v-else icon="mdi-alert-circle-outline" color="error" size="18" />
-                        <span>{{ toolCallLabel(toolCall) }}</span>
-                      </div>
-                    </div>
-                  </template>
-                </div>
-                <time class="message-time" :datetime="msg.createdAt">{{ formatTime(msg.createdAt) }}</time>
+            <article v-for="msg in currentMessages" :key="msg.id" class="message-row"
+              :class="{ 'message-self': msg.role === 'user', 'message-signal': msg.role === 'signal' }"
+              :aria-label="msg.role === 'user' ? '我的消息' : msg.role === 'signal' ? '系统提醒' : '回复'">
+              <div v-if="msg.role === 'signal'" class="signal-message">
+                <span>触发系统提醒</span>
+                <span aria-hidden="true">·</span>
+                <time :datetime="msg.createdAt">{{ formatTime(msg.createdAt) }}</time>
               </div>
+              <template v-else>
+                <v-avatar color="surface-variant" size="32" class="message-avatar" aria-hidden="true">
+                  <v-img v-if="msg.role === 'user' && appStore.userInfo?.avatar" :src="assetUrl(appStore.userInfo.avatar)" alt="" cover>
+                    <template #error><v-icon icon="mdi-account-outline" size="18" /></template>
+                  </v-img>
+                  <v-img v-else-if="currentConversation?.avatar" :src="assetUrl(currentConversation.avatar)" alt="" cover>
+                    <template #error><v-icon icon="mdi-chat-outline" size="18" color="secondary" /></template>
+                  </v-img>
+                  <v-icon v-else :icon="msg.role === 'user' ? 'mdi-account-outline' : 'mdi-chat-outline'" size="18"
+                    :color="msg.role === 'user' ? undefined : 'secondary'" />
+                </v-avatar>
+                <div class="message-bubble-wrapper">
+                  <span class="message-author">{{ msg.role === 'user' ? '我' : currentConversation?.display_name }}</span>
+                  <div class="message-bubble" :class="msg.role === 'user' ? 'bubble-self' : 'bubble-other'">
+                    <div v-if="msg.loading && !msg.content && !msg.toolCalls?.length" class="reply-loading" role="status"><v-progress-circular indeterminate size="18" width="2" color="secondary" /> 正在回复…</div>
+                    <p v-else-if="msg.role === 'user'" class="message-text">{{ msg.content }}</p>
+                    <template v-else>
+                      <div v-if="msg.content" class="message-text markdown-content" v-html="renderAssistantMessage(msg)" />
+                      <div v-if="msg.toolCalls?.length" class="tool-status-list" aria-live="polite">
+                        <div v-for="toolCall in msg.toolCalls" :key="toolCall.id" class="tool-status"
+                          :class="`tool-status-${toolCall.status}`" role="status"
+                          @animationend="removeCompletedToolCall($event, msg.id, toolCall.id, toolCall.status)">
+                          <v-progress-circular v-if="toolCall.status === 'running'" indeterminate size="16" width="2" color="secondary" />
+                          <v-icon v-else-if="toolCall.status === 'success'" icon="mdi-check-circle-outline" color="success" size="18" />
+                          <v-icon v-else icon="mdi-alert-circle-outline" color="error" size="18" />
+                          <span>{{ toolCallLabel(toolCall) }}</span>
+                        </div>
+                      </div>
+                    </template>
+                  </div>
+                  <time class="message-time" :datetime="msg.createdAt">{{ formatTime(msg.createdAt) }}</time>
+                </div>
+              </template>
             </article>
           </template>
         </div>
@@ -858,6 +867,23 @@ onBeforeUnmount(stopActiveStream)
 
 .message-self {
   justify-content: flex-end;
+}
+
+.message-signal {
+  width: 100%;
+  justify-content: center;
+  padding-block: 2px;
+}
+
+.signal-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--site-muted);
+  font-size: 0.72rem;
+  line-height: 1.5;
+  text-align: center;
 }
 
 .message-avatar {
