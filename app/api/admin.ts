@@ -23,6 +23,15 @@ export interface QueryUsersDTO {
   pagination: AdminPaginationDTO
 }
 
+export interface ResetPasswordDTO {
+  user_id: number
+  temporary_password: string
+}
+
+export interface UpdateActiveReq {
+  active: boolean
+}
+
 export const useAdminApi = () => {
   const { $api } = useHttp()
 
@@ -36,6 +45,21 @@ export const useAdminApi = () => {
         },
       })
       return unwrap(resp)
+    },
+
+    async resetPassword(userId: number): Promise<ResetPasswordDTO> {
+      const resp = await $api<ResetPasswordDTO | Envelope<ResetPasswordDTO>>(`/admin/resetPassword/${encodeURIComponent(userId)}`, {
+        method: 'POST',
+      })
+      return unwrap(resp)
+    },
+
+    async updateActive(userId: number, req: UpdateActiveReq): Promise<void> {
+      const resp = await $api<unknown | Envelope<unknown>>(`/admin/updateActive/${encodeURIComponent(userId)}`, {
+        method: 'PUT',
+        body: req,
+      })
+      unwrap(resp)
     },
   }
 

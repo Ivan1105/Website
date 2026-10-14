@@ -79,6 +79,7 @@
             <span>角色</span>
             <span>状态</span>
             <span>最后登录</span>
+            <span>操作</span>
           </div>
 
           <article v-for="user in users" :key="user.user_id" class="user-row">
@@ -113,7 +114,21 @@
 
             <div class="user-field">
               <span class="user-field-label">状态</span>
-              <v-chip :color="user.is_active ? 'success' : 'error'" size="small" variant="tonal">
+              <v-switch
+                v-if="user.role !== 'admin'"
+                :key="`${user.user_id}-${user.is_active}-${activeControlVersion}`"
+                :model-value="user.is_active"
+                :label="user.is_active ? '已启用' : '已停用'"
+                :color="user.is_active ? 'success' : 'error'"
+                :loading="activeLoading && activeTarget?.user_id === user.user_id"
+                :disabled="activeLoading"
+                density="compact"
+                hide-details
+                inset
+                :aria-label="`${user.username}：${user.is_active ? '停用用户' : '启用用户'}`"
+                @update:model-value="value => openActiveConfirm(user, value)"
+              />
+              <v-chip v-else :color="user.is_active ? 'success' : 'error'" size="small" variant="tonal">
                 {{ user.is_active ? '已启用' : '已停用' }}
               </v-chip>
             </div>
@@ -121,6 +136,19 @@
             <div class="user-field user-last-login">
               <span class="user-field-label">最后登录</span>
               <span>{{ formatLastLogin(user.last_login_time) }}</span>
+            </div>
+
+            <div class="user-actions">
+              <v-btn
+                v-if="user.role !== 'admin'"
+                variant="outlined"
+                color="error"
+                size="small"
+                prepend-icon="mdi-lock-reset"
+                @click="openResetConfirm(user)"
+              >
+                重置密码
+              </v-btn>
             </div>
           </article>
         </div>
@@ -154,6 +182,126 @@
         </v-btn>
       </v-card>
     </section>
+
+    <v-dialog v-model="activeConfirmOpen" :persistent="activeLoading" max-width="500">
+      <v-card class="operation-dialog" :title="`确认${pendingActive ? '启用' : '停用'}用户`">
+        <v-card-text v-if="activeTarget" class="reset-dialog-content">
+          <span
+            class="active-dialog-icon"
+            :class="pendingActive ? 'active-dialog-icon-enable' : 'active-dialog-icon-disable'"
+            aria-hidden="true"
+          >
+            <v-icon :icon="pendingActive ? 'mdi-account-check-outline' : 'mdi-account-off-outline'" size="30" />
+          </span>
+          <div>
+            <p>
+              确认{{ pendingActive ? '启用' : '停用' }}
+              <strong>{{ activeTarget.nickname || activeTarget.username }}</strong>
+              （@{{ activeTarget.username }}）吗？
+            </p>
+            <p class="muted">
+              {{ pendingActive ? '启用后，该用户可恢复正常登录。' : '停用后，该用户可能无法继续登录。' }}
+            </p>
+          </div>
+          <p v-if="activeError" class="reset-error" role="alert">{{ activeError }}</p>
+        </v-card-text>
+
+        <v-card-actions>
+          <v-spacer />
+          <v-btn variant="text" :disabled="activeLoading" @click="closeActiveConfirm">取消</v-btn>
+          <v-btn
+            :color="pendingActive ? 'success' : 'error'"
+            :loading="activeLoading"
+            :disabled="activeLoading"
+            @click="confirmUpdateActive"
+          >
+            确认{{ pendingActive ? '启用' : '停用' }}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <v-dialog v-model="resetConfirmOpen" :persistent="resetLoading" max-width="500">
+      <v-card class="reset-dialog" title="确认重置密码">
+        <v-card-text v-if="resetTarget" class="reset-dialog-content">
+          <span class="reset-dialog-icon" aria-hidden="true">
+            <v-icon icon="mdi-lock-alert-outline" size="30" />
+          </span>
+          <div>
+            <p>
+              确认重置 <strong>{{ resetTarget.nickname || resetTarget.username }}</strong>
+              （@{{ resetTarget.username }}）的密码吗？
+            </p>
+            <p class="muted">当前密码将立即失效，此操作无法撤销。</p>
+          </div>
+          <p v-if="resetError" class="reset-error" role="alert">{{ resetError }}</p>
+        </v-card-text>
+
+        <v-card-actions>
+          <v-spacer />
+          <v-btn variant="text" :disabled="resetLoading" @click="closeResetConfirm">取消</v-btn>
+          <v-btn color="error" :loading="resetLoading" :disabled="resetLoading" @click="confirmResetPassword">
+            确认重置
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <v-dialog v-model="resetResultOpen" persistent max-width="540">
+      <v-card class="reset-dialog" title="密码重置成功">
+        <v-card-text class="reset-result-content">
+          <span class="reset-success-icon" aria-hidden="true">
+            <v-icon icon="mdi-check-circle-outline" size="32" />
+          </span>
+          <div>
+            <p v-if="resetResultUser">
+              <strong>{{ resetResultUser.nickname || resetResultUser.username }}</strong>
+              （@{{ resetResultUser.username }}）的临时密码已生成。
+            </p>
+            <p class="muted">该密码仅显示一次，请复制并安全地提供给用户。</p>
+          </div>
+
+          <v-text-field
+            :model-value="temporaryPassword"
+            label="临时密码"
+            readonly
+            hide-details
+            class="temporary-password-field"
+          >
+            <template #append-inner>
+              <v-btn
+                :icon="copySucceeded ? 'mdi-check' : 'mdi-content-copy'"
+                variant="text"
+                width="44"
+                height="44"
+                :color="copySucceeded ? 'success' : 'secondary'"
+                aria-label="复制临时密码"
+                title="复制临时密码"
+                @click="copyTemporaryPassword"
+              />
+            </template>
+          </v-text-field>
+
+          <p
+            v-if="copyMessage"
+            class="copy-message"
+            :class="{ 'copy-message-error': !copySucceeded }"
+            :role="copySucceeded ? 'status' : 'alert'"
+          >
+            {{ copyMessage }}
+          </p>
+        </v-card-text>
+
+        <v-card-actions>
+          <v-spacer />
+          <v-btn color="primary" @click="closeResetResult">我已保存，关闭</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <v-snackbar v-model="activeSuccess" color="success" location="bottom" :timeout="2500">
+      {{ activeSuccessMessage }}
+    </v-snackbar>
   </div>
 </template>
 
@@ -164,6 +312,8 @@ import { useAppStore } from '@/stores/app'
 
 const PAGE_SIZE = 20
 const USERS_ERROR = '暂时无法加载用户列表，请稍后重试。'
+const RESET_PASSWORD_ERROR = '暂时无法重置密码，请稍后重试。'
+const UPDATE_ACTIVE_ERROR = '暂时无法更新用户状态，请稍后重试。'
 
 const appStore = useAppStore()
 const { adminApi } = useAdminApi()
@@ -173,6 +323,23 @@ const { assetUrl } = useAssetUrl()
 const users = ref<AdminUserDTO[]>([])
 const usersLoading = ref(false)
 const usersError = ref<string | null>(null)
+const activeConfirmOpen = ref(false)
+const activeTarget = ref<AdminUserDTO | null>(null)
+const pendingActive = ref(false)
+const activeLoading = ref(false)
+const activeError = ref<string | null>(null)
+const activeSuccess = ref(false)
+const activeSuccessMessage = ref('用户状态已更新')
+const activeControlVersion = ref(0)
+const resetConfirmOpen = ref(false)
+const resetTarget = ref<AdminUserDTO | null>(null)
+const resetLoading = ref(false)
+const resetError = ref<string | null>(null)
+const resetResultOpen = ref(false)
+const resetResultUser = ref<AdminUserDTO | null>(null)
+const temporaryPassword = ref('')
+const copyMessage = ref('')
+const copySucceeded = ref(false)
 const pagination = ref<AdminPaginationDTO>({
   page: 0,
   page_size: PAGE_SIZE,
@@ -232,6 +399,152 @@ const handlePageChange = (page: number) => {
   if (apiPage === pagination.value.page || usersLoading.value) return
   void loadUsers(apiPage)
 }
+
+const openActiveConfirm = (user: AdminUserDTO, active: boolean | null) => {
+  if (user.role === 'admin' || activeLoading.value || typeof active !== 'boolean' || active === user.is_active) return
+
+  activeTarget.value = user
+  pendingActive.value = active
+  activeError.value = null
+  activeControlVersion.value += 1
+  activeConfirmOpen.value = true
+}
+
+const closeActiveConfirm = () => {
+  if (activeLoading.value) return
+
+  activeConfirmOpen.value = false
+  activeTarget.value = null
+  activeError.value = null
+}
+
+const confirmUpdateActive = async () => {
+  const user = activeTarget.value
+  if (!user || user.role === 'admin' || activeLoading.value || !appStore.token) return
+
+  const requestedToken = appStore.token
+  const nextActive = pendingActive.value
+  activeLoading.value = true
+  activeError.value = null
+
+  try {
+    await adminApi.updateActive(user.user_id, { active: nextActive })
+    if (appStore.token !== requestedToken || !isAdmin.value) return
+
+    users.value = users.value.map(item => item.user_id === user.user_id
+      ? { ...item, is_active: nextActive }
+      : item)
+    activeSuccessMessage.value = `${user.nickname || user.username} 已${nextActive ? '启用' : '停用'}`
+    activeSuccess.value = true
+    activeConfirmOpen.value = false
+    activeTarget.value = null
+  } catch (error) {
+    if (appStore.token !== requestedToken) return
+
+    if (isApiError(error) && error.status === 401) {
+      appStore.clearAuth()
+      activeConfirmOpen.value = false
+      activeTarget.value = null
+      return
+    }
+
+    activeError.value = isApiError(error) ? error.message : UPDATE_ACTIVE_ERROR
+  } finally {
+    activeLoading.value = false
+  }
+}
+
+const openResetConfirm = (user: AdminUserDTO) => {
+  if (user.role === 'admin' || resetLoading.value) return
+
+  resetTarget.value = user
+  resetError.value = null
+  resetConfirmOpen.value = true
+}
+
+const closeResetConfirm = () => {
+  if (resetLoading.value) return
+
+  resetConfirmOpen.value = false
+  resetTarget.value = null
+  resetError.value = null
+}
+
+const confirmResetPassword = async () => {
+  const user = resetTarget.value
+  if (!user || user.role === 'admin' || resetLoading.value || !appStore.token) return
+
+  const requestedToken = appStore.token
+  resetLoading.value = true
+  resetError.value = null
+
+  try {
+    const result = await adminApi.resetPassword(user.user_id)
+    if (appStore.token !== requestedToken || !isAdmin.value) return
+
+    temporaryPassword.value = result.temporary_password
+    resetResultUser.value = user
+    copyMessage.value = ''
+    copySucceeded.value = false
+    resetConfirmOpen.value = false
+    resetTarget.value = null
+    resetResultOpen.value = true
+  } catch (error) {
+    if (appStore.token !== requestedToken) return
+
+    if (isApiError(error) && error.status === 401) {
+      appStore.clearAuth()
+      resetConfirmOpen.value = false
+      resetTarget.value = null
+      return
+    }
+
+    resetError.value = isApiError(error) ? error.message : RESET_PASSWORD_ERROR
+  } finally {
+    resetLoading.value = false
+  }
+}
+
+const copyTemporaryPassword = async () => {
+  if (!temporaryPassword.value) return
+
+  copyMessage.value = ''
+  copySucceeded.value = false
+
+  try {
+    if (!import.meta.client || !navigator.clipboard) {
+      throw new Error('Clipboard API unavailable')
+    }
+
+    await navigator.clipboard.writeText(temporaryPassword.value)
+    copySucceeded.value = true
+    copyMessage.value = '临时密码已复制。'
+  } catch {
+    copyMessage.value = '复制失败，请手动选择并复制临时密码。'
+  }
+}
+
+const closeResetResult = () => {
+  resetResultOpen.value = false
+  resetResultUser.value = null
+  temporaryPassword.value = ''
+  copyMessage.value = ''
+  copySucceeded.value = false
+}
+
+watch(resetConfirmOpen, (open) => {
+  if (!open && !resetLoading.value) {
+    resetTarget.value = null
+    resetError.value = null
+  }
+})
+
+watch(activeConfirmOpen, (open) => {
+  if (!open && !activeLoading.value) {
+    activeTarget.value = null
+    activeError.value = null
+  }
+})
 
 onMounted(async () => {
   await initializeAuth()
@@ -363,7 +676,7 @@ onMounted(async () => {
 .users-table-header,
 .user-row {
   display: grid;
-  grid-template-columns: minmax(240px, 1fr) 100px 120px 110px minmax(170px, 0.7fr);
+  grid-template-columns: minmax(220px, 1fr) 90px 110px 100px minmax(150px, 0.7fr) 120px;
   align-items: center;
   gap: var(--site-space-2);
   padding-inline: clamp(24px, 4vw, 36px);
@@ -421,8 +734,24 @@ onMounted(async () => {
   min-width: 0;
 }
 
+.user-field :deep(.v-switch) {
+  width: max-content;
+}
+
+.user-field :deep(.v-label) {
+  color: var(--site-muted);
+  font-size: 0.8rem;
+  opacity: 1;
+}
+
 .user-field-label {
   display: none;
+}
+
+.user-actions {
+  min-height: 36px;
+  display: flex;
+  align-items: center;
 }
 
 .users-pagination {
@@ -434,6 +763,80 @@ onMounted(async () => {
   padding: 12px clamp(24px, 4vw, 36px);
   color: var(--site-muted);
   font-size: 0.85rem;
+}
+
+.reset-dialog,
+.operation-dialog {
+  border: 1px solid var(--site-border);
+}
+
+.reset-dialog-content,
+.reset-result-content {
+  display: grid;
+  gap: var(--site-space-3);
+}
+
+.reset-dialog-content p,
+.reset-result-content p {
+  margin: 0;
+}
+
+.reset-dialog-content .muted,
+.reset-result-content .muted {
+  margin-top: 6px;
+}
+
+.reset-dialog-icon,
+.reset-success-icon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+}
+
+.reset-dialog-icon {
+  background: rgb(var(--v-theme-error) / 10%);
+  color: rgb(var(--v-theme-error));
+}
+
+.reset-success-icon {
+  background: rgb(var(--v-theme-success) / 10%);
+  color: rgb(var(--v-theme-success));
+}
+
+.active-dialog-icon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+}
+
+.active-dialog-icon-enable {
+  background: rgb(var(--v-theme-success) / 10%);
+  color: rgb(var(--v-theme-success));
+}
+
+.active-dialog-icon-disable {
+  background: rgb(var(--v-theme-error) / 10%);
+  color: rgb(var(--v-theme-error));
+}
+
+.reset-error,
+.copy-message-error {
+  color: rgb(var(--v-theme-error));
+}
+
+.temporary-password-field :deep(input) {
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.copy-message {
+  color: rgb(var(--v-theme-success));
+  font-size: 0.875rem;
 }
 
 .admin-state {
@@ -538,6 +941,14 @@ onMounted(async () => {
 
   .user-last-login {
     grid-column: 1 / -1;
+  }
+
+  .user-actions {
+    grid-column: 1 / -1;
+  }
+
+  .user-actions .v-btn {
+    width: 100%;
   }
 
   .users-pagination {

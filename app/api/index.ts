@@ -1,7 +1,7 @@
 export { ApiError, isApiError } from './http'
 
 export { useAdminApi } from './admin'
-export type { AdminPaginationDTO, AdminUserDTO, QueryUsersDTO } from './admin'
+export type { AdminPaginationDTO, AdminUserDTO, QueryUsersDTO, ResetPasswordDTO, UpdateActiveReq } from './admin'
 
 export { useChatApi } from './chat'
 export type {
