@@ -208,9 +208,20 @@
           </dl>
 
           <div class="account-actions">
-            <v-btn variant="outlined" color="secondary" size="large" prepend-icon="mdi-logout" @click="handleLogout">
-              退出登录
-            </v-btn>
+            <div class="account-action-buttons">
+              <v-btn
+                v-if="appStore.userInfo?.role === 'admin'"
+                to="/admin"
+                color="primary"
+                size="large"
+                prepend-icon="mdi-shield-account-outline"
+              >
+                管理页面
+              </v-btn>
+              <v-btn variant="outlined" color="secondary" size="large" prepend-icon="mdi-logout" @click="handleLogout">
+                退出登录
+              </v-btn>
+            </div>
             <nuxt-link to="/" class="back-home">
               <v-icon icon="mdi-arrow-left" size="16" /> 返回首页
             </nuxt-link>
@@ -1201,6 +1212,12 @@ const handleLogout = async () => {
   margin-top: var(--site-space-4);
 }
 
+.account-action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--site-space-2);
+}
+
 .back-home {
   min-height: 44px;
   display: inline-flex;
@@ -1296,6 +1313,12 @@ const handleLogout = async () => {
     flex-direction: column;
   }
 
+  .account-action-buttons {
+    flex-direction: column;
+  }
+
+  .account-action-buttons,
+  .account-action-buttons .v-btn,
   .account-actions .v-btn,
   .back-home {
     width: 100%;

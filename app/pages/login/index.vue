@@ -100,7 +100,7 @@ const handleLogin = async () => {
     })
     appStore.setToken(token)
     await refreshUserInfo()
-    await navigateTo('/')
+    await navigateTo('/account')
   } catch (e) {
     showError(e instanceof Error ? e.message : '登录失败，请检查用户名或密码')
   } finally {
