@@ -118,9 +118,21 @@
               <div class="message-bubble-wrapper">
                 <span class="message-author">{{ msg.role === 'user' ? '我' : currentConversation?.display_name }}</span>
                 <div class="message-bubble" :class="msg.role === 'user' ? 'bubble-self' : 'bubble-other'">
-                  <div v-if="msg.loading && !msg.content" class="reply-loading" role="status"><v-progress-circular indeterminate size="18" width="2" color="secondary" /> 正在回复…</div>
+                  <div v-if="msg.loading && !msg.content && !msg.toolCalls?.length" class="reply-loading" role="status"><v-progress-circular indeterminate size="18" width="2" color="secondary" /> 正在回复…</div>
                   <p v-else-if="msg.role === 'user'" class="message-text">{{ msg.content }}</p>
-                  <div v-else class="message-text markdown-content" v-html="renderAssistantMessage(msg)" />
+                  <template v-else>
+                    <div v-if="msg.content" class="message-text markdown-content" v-html="renderAssistantMessage(msg)" />
+                    <div v-if="msg.toolCalls?.length" class="tool-status-list" aria-live="polite">
+                      <div v-for="toolCall in msg.toolCalls" :key="toolCall.id" class="tool-status"
+                        :class="`tool-status-${toolCall.status}`" role="status"
+                        @animationend="removeCompletedToolCall($event, msg.id, toolCall.id, toolCall.status)">
+                        <v-progress-circular v-if="toolCall.status === 'running'" indeterminate size="16" width="2" color="secondary" />
+                        <v-icon v-else-if="toolCall.status === 'success'" icon="mdi-check-circle-outline" color="success" size="18" />
+                        <v-icon v-else icon="mdi-alert-circle-outline" color="error" size="18" />
+                        <span>{{ toolCallLabel(toolCall) }}</span>
+                      </div>
+                    </div>
+                  </template>
                 </div>
                 <time class="message-time" :datetime="msg.createdAt">{{ formatTime(msg.createdAt) }}</time>
               </div>
@@ -157,7 +169,7 @@
 </template>
 
 <script setup lang="ts">
-import { isApiError, useChatApi, type ActiveRunDTO, type ConversationDTO, type MessageDTO } from '@/api'
+import { isApiError, useChatApi, type ActiveRunDTO, type ChatRunStreamEvent, type ConversationDTO, type MessageDTO } from '@/api'
 import { useAppStore } from '@/stores/app'
 import { useDisplay } from 'vuetify'
 import DOMPurify from 'isomorphic-dompurify'
@@ -168,8 +180,15 @@ const { chatApi } = useChatApi()
 const appStore = useAppStore()
 const { mobile } = useDisplay()
 const { assetUrl } = useAssetUrl()
+type ToolCallStatus = 'running' | 'success' | 'error'
+interface ToolCallState {
+  id: string
+  name: string
+  status: ToolCallStatus
+}
 interface Message extends MessageDTO {
   loading?: boolean
+  toolCalls?: ToolCallState[]
 }
 const markdown = new MarkdownIt({ html: false, linkify: true, breaks: true })
 const renderedMessageCache = new WeakMap<Message, { content: string, html: string }>()
@@ -219,6 +238,7 @@ const MESSAGES_PAGE_SIZE = 20
 let messagesLoadVersion = 0
 let streamVersion = 0
 let streamAbortController: AbortController | null = null
+const activeStreamMessageIds = new Set<string>()
 watch(mobile, value => {
   if (!value) drawerOpen.value = false
 })
@@ -234,12 +254,30 @@ const formatTime = (value: string) => {
 const scrollToBottom = () => {
   if (messagesAreaRef.value) messagesAreaRef.value.scrollTop = messagesAreaRef.value.scrollHeight
 }
+const toolCallLabel = (toolCall: ToolCallState) => {
+  if (toolCall.status === 'running') return `开始工具调用【${toolCall.name}】`
+  return `工具请求${toolCall.status === 'success' ? '成功' : '失败'}【${toolCall.name}】`
+}
+const removeCompletedToolCall = (event: AnimationEvent, messageId: string, toolCallId: string, status: ToolCallStatus) => {
+  if (event.target !== event.currentTarget) return
+  if (status === 'running') return
+  const message = currentMessages.value.find(item => item.id === messageId)
+  const toolCall = message?.toolCalls?.find(item => item.id === toolCallId)
+  if (!message || !toolCall || toolCall.status !== status) return
+  message.toolCalls = message.toolCalls?.filter(item => item.id !== toolCallId)
+}
 const stopActiveStream = () => {
   streamVersion += 1
   streamAbortController?.abort()
   streamAbortController = null
-  const activeReply = currentMessages.value.find(message => message.id === activeReplyId.value)
-  if (activeReply) activeReply.loading = false
+  for (const messageId of activeStreamMessageIds) {
+    const message = currentMessages.value.find(item => item.id === messageId)
+    if (message) {
+      message.loading = false
+      message.toolCalls = []
+    }
+  }
+  activeStreamMessageIds.clear()
   activeRunId.value = null
   activeReplyId.value = null
   sending.value = false
@@ -332,22 +370,102 @@ const streamActiveRun = async (runId: string, replyId: string, threadId: string)
   activeReplyId.value = replyId
   sending.value = true
 
-  const reply = currentMessages.value.find(message => message.id === replyId)
-  if (!reply) {
+  const placeholder = currentMessages.value.find(message => message.id === replyId)
+  if (!placeholder) {
     stopActiveStream()
     return
   }
-  reply.content = ''
-  reply.loading = true
+  placeholder.content = ''
+  placeholder.loading = true
+  placeholder.toolCalls = []
+  activeStreamMessageIds.add(replyId)
+
+  const initializedMessageIds = new Set<string>()
+  let placeholderClaimed = false
+
+  const ensureStreamMessage = (messageId: string) => {
+    let message = currentMessages.value.find(item => item.id === messageId)
+
+    if (!placeholderClaimed) {
+      placeholderClaimed = true
+      if (message && message !== placeholder) {
+        const placeholderIndex = currentMessages.value.indexOf(placeholder)
+        if (placeholderIndex >= 0) currentMessages.value.splice(placeholderIndex, 1)
+      } else {
+        activeStreamMessageIds.delete(placeholder.id)
+        placeholder.id = messageId
+        message = placeholder
+      }
+    }
+
+    if (!message) {
+      message = {
+        id: messageId,
+        role: 'assistant',
+        content: '',
+        createdAt: new Date().toISOString(),
+        loading: true,
+        toolCalls: [],
+      }
+      currentMessages.value.push(message)
+    }
+
+    if (!initializedMessageIds.has(messageId)) {
+      message.content = ''
+      message.loading = true
+      message.toolCalls = []
+      initializedMessageIds.add(messageId)
+      activeStreamMessageIds.add(messageId)
+    }
+
+    return message
+  }
+
+  const activateMessage = (messageId: string) => {
+    const previousMessage = currentMessages.value.find(item => item.id === activeReplyId.value)
+    if (previousMessage && previousMessage.id !== messageId) previousMessage.loading = false
+    const message = ensureStreamMessage(messageId)
+    message.loading = true
+    activeReplyId.value = messageId
+    return message
+  }
+
+  const handleStreamEvent = (event: ChatRunStreamEvent) => {
+    if (event.type === 'done' || event.type === 'error') return
+
+    if (event.type === 'message_start') {
+      activateMessage(event.message_id)
+    } else if (event.type === 'text') {
+      const message = ensureStreamMessage(event.message_id)
+      if (!activeReplyId.value || activeReplyId.value === replyId) activeReplyId.value = event.message_id
+      message.content += event.content
+    } else if (event.type === 'tool_call') {
+      const message = ensureStreamMessage(event.message_id)
+      const existingToolCall = message.toolCalls?.find(item => item.id === event.tool_call_id)
+      if (existingToolCall) {
+        existingToolCall.name = event.tool_name
+        existingToolCall.status = 'running'
+      } else {
+        message.toolCalls?.push({ id: event.tool_call_id, name: event.tool_name, status: 'running' })
+      }
+    } else if (event.type === 'tool_result') {
+      const message = ensureStreamMessage(event.message_id)
+      const status: ToolCallStatus = event.is_error ? 'error' : 'success'
+      const existingToolCall = message.toolCalls?.find(item => item.id === event.tool_call_id)
+      if (existingToolCall) {
+        existingToolCall.name = event.tool_name
+        existingToolCall.status = status
+      } else {
+        message.toolCalls?.push({ id: event.tool_call_id, name: event.tool_name, status })
+      }
+    }
+    nextTick(scrollToBottom)
+  }
 
   try {
-    await chatApi.streamRun(runId, (chunk: string) => {
+    await chatApi.streamRun(runId, (event) => {
       if (currentStreamVersion !== streamVersion || currentConversation.value?.thread_id !== threadId) return
-      const message = currentMessages.value.find(item => item.id === replyId)
-      if (message) {
-        message.content += chunk
-        nextTick(scrollToBottom)
-      }
+      handleStreamEvent(event)
     }, controller.signal)
   } catch (error) {
     if (currentStreamVersion === streamVersion && !controller.signal.aborted) {
@@ -355,8 +473,14 @@ const streamActiveRun = async (runId: string, replyId: string, threadId: string)
     }
   } finally {
     if (currentStreamVersion === streamVersion) {
-      const message = currentMessages.value.find(item => item.id === replyId)
-      if (message) message.loading = false
+      for (const messageId of activeStreamMessageIds) {
+        const message = currentMessages.value.find(item => item.id === messageId)
+        if (message) {
+          message.loading = false
+          message.toolCalls = message.toolCalls?.filter(toolCall => toolCall.status !== 'running')
+        }
+      }
+      activeStreamMessageIds.clear()
       streamAbortController = null
       activeRunId.value = null
       activeReplyId.value = null
@@ -801,6 +925,61 @@ onBeforeUnmount(stopActiveStream)
   gap: 10px;
   font-size: 0.85rem;
   color: var(--site-muted);
+}
+
+.tool-status-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-top: 10px;
+}
+
+.tool-status-list:first-child {
+  margin-top: 0;
+}
+
+.tool-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 24px;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--site-muted);
+  overflow-wrap: anywhere;
+}
+
+.tool-status-success {
+  color: rgb(var(--v-theme-success));
+  animation: tool-status-expire 2s ease forwards;
+}
+
+.tool-status-error {
+  color: rgb(var(--v-theme-error));
+  animation: tool-status-expire 2s ease forwards;
+}
+
+@keyframes tool-status-expire {
+  0%, 78% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tool-status-success,
+  .tool-status-error {
+    animation-name: tool-status-expire-reduced;
+  }
+}
+
+@keyframes tool-status-expire-reduced {
+  from, to {
+    opacity: 1;
+  }
 }
 
 .history-loader {

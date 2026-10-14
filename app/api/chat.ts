@@ -70,6 +70,55 @@ export interface CreateThreadDTO {
   thread_id: string
 }
 
+export interface ChatRunMessageStartEvent {
+  type: 'message_start'
+  run_id: string
+  message_id: string
+}
+
+export interface ChatRunTextEvent {
+  type: 'text'
+  run_id: string
+  message_id: string
+  content: string
+}
+
+export interface ChatRunToolCallEvent {
+  type: 'tool_call'
+  run_id: string
+  message_id: string
+  tool_call_id: string
+  tool_name: string
+}
+
+export interface ChatRunToolResultEvent {
+  type: 'tool_result'
+  run_id: string
+  message_id: string
+  tool_call_id: string
+  tool_name: string
+  is_error: boolean
+}
+
+export interface ChatRunDoneEvent {
+  type: 'done'
+  run_id: string
+}
+
+export interface ChatRunErrorEvent {
+  type: 'error'
+  run_id: string
+  message: string
+}
+
+export type ChatRunStreamEvent =
+  | ChatRunMessageStartEvent
+  | ChatRunTextEvent
+  | ChatRunToolCallEvent
+  | ChatRunToolResultEvent
+  | ChatRunDoneEvent
+  | ChatRunErrorEvent
+
 export const useChatApi = () => {
   const { $api } = useHttp()
 
@@ -124,7 +173,7 @@ export const useChatApi = () => {
       return unwrap(resp)
     },
 
-    async streamRun(runId: string, onChunk: (chunk: string) => void, signal?: AbortSignal): Promise<void> {
+    async streamRun(runId: string, onEvent: (event: ChatRunStreamEvent) => void, signal?: AbortSignal): Promise<void> {
       const runtimeConfig = useRuntimeConfig()
       const baseURL = runtimeConfig.public.apiUrl ?? ''
 
@@ -166,13 +215,23 @@ export const useChatApi = () => {
       let eventData: string[] = []
       let streamDone = false
 
+      const requireString = (event: Record<string, unknown>, field: string, payload: unknown) => {
+        const value = event[field]
+        if (typeof value !== 'string' || !value.trim()) {
+          throw new ApiError(`回复流字段 ${field} 格式错误`, resp.status, payload)
+        }
+        return value
+      }
+
       const dispatchEvent = () => {
         const currentEventName = eventName
         const chunk = eventData.join('\n')
         eventName = ''
         eventData = []
 
-        if (currentEventName !== 'text' && currentEventName !== 'done') return
+        if (!currentEventName && !chunk) return
+        if (currentEventName === 'ping') return
+        if (!['message_start', 'text', 'tool_call', 'tool_result', 'done', 'error'].includes(currentEventName)) return
 
         let payload: unknown
         try {
@@ -186,17 +245,60 @@ export const useChatApi = () => {
         }
 
         const event = payload as Record<string, unknown>
-        if (typeof event.run_id !== 'string' || event.run_id !== runId) {
+        const eventRunId = requireString(event, 'run_id', payload)
+        if (eventRunId !== runId) {
           throw new ApiError('回复流运行标识不匹配', resp.status, payload)
         }
 
-        if (currentEventName === 'text') {
-          if (typeof event.content !== 'string') {
-            throw new ApiError('回复流文本内容格式错误', resp.status, payload)
+        switch (currentEventName) {
+          case 'message_start':
+            onEvent({
+              type: currentEventName,
+              run_id: eventRunId,
+              message_id: requireString(event, 'message_id', payload),
+            })
+            break
+          case 'text':
+            if (typeof event.content !== 'string') {
+              throw new ApiError('回复流文本内容格式错误', resp.status, payload)
+            }
+            onEvent({
+              type: currentEventName,
+              run_id: eventRunId,
+              message_id: requireString(event, 'message_id', payload),
+              content: event.content,
+            })
+            break
+          case 'tool_call':
+            onEvent({
+              type: currentEventName,
+              run_id: eventRunId,
+              message_id: requireString(event, 'message_id', payload),
+              tool_call_id: requireString(event, 'tool_call_id', payload),
+              tool_name: requireString(event, 'tool_name', payload),
+            })
+            break
+          case 'tool_result':
+            if (typeof event.is_error !== 'boolean') {
+              throw new ApiError('回复流工具结果格式错误', resp.status, payload)
+            }
+            onEvent({
+              type: currentEventName,
+              run_id: eventRunId,
+              message_id: requireString(event, 'message_id', payload),
+              tool_call_id: requireString(event, 'tool_call_id', payload),
+              tool_name: requireString(event, 'tool_name', payload),
+              is_error: event.is_error,
+            })
+            break
+          case 'done':
+            onEvent({ type: currentEventName, run_id: eventRunId })
+            streamDone = true
+            break
+          case 'error': {
+            const message = requireString(event, 'message', payload)
+            throw new ApiError(message, resp.status, payload)
           }
-          onChunk(event.content)
-        } else {
-          streamDone = true
         }
       }
 

@@ -4,6 +4,13 @@ export { useChatApi } from './chat'
 export type {
   ActiveRunDTO,
   ActiveRunUserMessageDTO,
+  ChatRunDoneEvent,
+  ChatRunErrorEvent,
+  ChatRunMessageStartEvent,
+  ChatRunStreamEvent,
+  ChatRunTextEvent,
+  ChatRunToolCallEvent,
+  ChatRunToolResultEvent,
   ConversationDTO,
   CreateThreadDTO,
   MessageDTO,
