@@ -23,3 +23,4 @@
 * Do not introduce `any` unless absolutely necessary.
 * Avoid unnecessary dependencies and abstractions.
 * Prefer small, simple, and composable modules.
+* 主题色为miku代表色，即#39C5BB

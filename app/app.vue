@@ -4,7 +4,7 @@
     <v-app-bar flat class="app-nav" height="76">
       <div class="site-container nav-container">
         <nuxt-link to="/" class="nav-brand" aria-label="Ivan1105 首页">
-          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+          <img class="brand-mark" src="/favicon.ico" alt="" aria-hidden="true">
           <span class="brand-copy"><strong>Ivan1105<span>.</span></strong><span>PERSONAL SPACE</span></span>
         </nuxt-link>
         <nav class="nav-panel" aria-label="主导航">
@@ -42,7 +42,7 @@
           </nuxt-link>
           <nuxt-link v-else to="/login" class="nav-link">登录</nuxt-link>
         </nav>
-        <span class="nav-note" aria-hidden="true">灵感，自由生长 <span>↗</span></span>
+        <span class="nav-note" aria-hidden="true">愛言葉 <span>♥</span></span>
       </div>
     </v-app-bar>
     <v-main id="main-content" tabindex="-1"><nuxt-page /></v-main>
@@ -59,7 +59,7 @@ const { assetUrl } = useAssetUrl()
 
 const navItems = [
   { label: '首页', to: '/' },
-  { label: '聊天', to: '/chatbox' },
+  { label: '智能体', to: '/chatbox' },
 ]
 
 const accountName = computed(() => appStore.userInfo?.username ?? '个人中心')
@@ -94,35 +94,10 @@ onMounted(() => {
 }
 
 .brand-mark {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
   width: 38px;
   height: 38px;
-  border: 1px solid var(--site-border);
   border-radius: 12px;
-  background: white;
-}
-
-.brand-mark i {
-  width: 3px;
-  height: 12px;
-  background: var(--site-accent);
-  border-radius: 3px;
-}
-
-.brand-mark i:nth-child(2) {
-  height: 23px;
-  background: var(--site-primary);
-}
-
-.brand-mark i:nth-child(3) {
-  height: 17px;
-}
-
-.brand-mark i:nth-child(4) {
-  height: 8px;
+  object-fit: contain;
 }
 
 .brand-copy {
@@ -234,8 +209,7 @@ onMounted(() => {
   }
   .brand-mark {
     width: 30px;
-    height: 34px;
-    gap: 2px;
+    height: 30px;
   }
   .nav-brand {
     gap: var(--site-space-1);

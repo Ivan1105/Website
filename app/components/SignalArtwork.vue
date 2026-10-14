@@ -3,16 +3,16 @@
     <div class="orbit orbit-outer"></div>
     <div class="orbit orbit-inner"></div>
     <div class="signal-disc">
-      <span class="disc-label">A LITTLE INSPIRATION</span>
+      <span class="disc-label">TEN THOUSAND STARS</span>
       <span class="disc-number">01<span> / </span></span>
       <div class="waveform">
         <span v-for="(height, index) in wave" :key="index" :style="{ height: `${height}%` }"></span>
       </div>
-      <span class="disc-caption">想法，在这里产生共鸣。</span>
+      <span class="disc-caption">ハジメテノオト</span>
     </div>
     <span class="orbit-point point-one"></span>
     <span class="orbit-point point-two"></span>
-    <span class="artwork-note">MIKU INSPIRED · 39</span>
+    <span class="artwork-note">HASTUNE MIKU · 39</span>
     <span class="artwork-cross">＋</span>
   </div>
 </template>

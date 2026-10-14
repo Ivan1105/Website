@@ -2,27 +2,27 @@
   <div class="home-page">
     <section class="site-container home-hero" aria-labelledby="home-title">
       <div class="hero-copy">
-        <p class="eyebrow hero-eyebrow"><span></span> HELLO, WORLD / 你好，世界</p>
-        <h1 id="home-title">嗨，我是 <span>Ivan1105</span><span class="title-dot">.</span></h1>
-        <p class="hero-tagline">让每一个想法，<br>有自由生长的空间。</p>
-        <p class="hero-description">这里是我的个人空间。<br>记录视觉创作与生活灵感，也探索数字世界的更多可能。</p>
+        <p class="eyebrow hero-eyebrow"><span></span>みくみくにしてあげる♪</p>
+        <h1 id="home-title">探索未知的世界<span class="title-dot">.</span></h1>
+        <p class="hero-tagline">梦想与奇迹，<br>皆有可能发生。</p>
+        <p class="hero-description">这里是我的个人网站。<br>记录视觉创作与生活灵感，也探索数字世界的更多可能。</p>
         <div class="hero-actions">
-          <v-btn to="/chatbox" color="primary" size="large" append-icon="mdi-arrow-top-right">进入聊天</v-btn>
-          <v-btn to="/login" variant="text" color="secondary" size="large">登录账户 <v-icon end size="18">mdi-arrow-right</v-icon></v-btn>
+          <v-btn to="/chatbox" color="primary" size="large" append-icon="mdi-arrow-top-right">智能体对话</v-btn>
+          <v-btn to="/account" variant="text" color="secondary" size="large">个人中心 <v-icon end size="18">mdi-arrow-right</v-icon></v-btn>
         </div>
         <div class="hero-footnote"><span aria-hidden="true">01 /</span> 一点灵感，一次新的对话。</div>
       </div>
       <SignalArtwork class="hero-artwork" />
     </section>
     <section class="site-container explore-section" aria-labelledby="explore-title">
-      <div class="section-heading"><div><p class="eyebrow">EXPLORE / 探索</p><h2 id="explore-title">从这里开始</h2></div><p class="muted">把灵感带进对话，让想法继续延伸。</p></div>
+      <div class="section-heading"><div><p class="eyebrow">EXPLORE / 探索</p><h2 id="explore-title">从这里开始</h2></div><p class="muted">尝试这些功能，开始你的探索。</p></div>
       <div class="entry-grid">
         <nuxt-link to="/chatbox" class="entry-card entry-chat">
           <span class="entry-icon"><v-icon icon="mdi-chat-processing-outline" size="25" /></span>
           <div><span class="entry-label">CHAT / 聊天</span><h3>聊聊你的新想法</h3><p>选择一个会话，开始交流与探索。</p></div>
           <span class="entry-arrow" aria-hidden="true">↗</span>
         </nuxt-link>
-        <nuxt-link to="/login" class="entry-card">
+        <nuxt-link to="/account" class="entry-card">
           <span class="entry-icon"><v-icon icon="mdi-account-outline" size="25" /></span>
           <div><span class="entry-label">ACCOUNT / 账户</span><h3>欢迎回来</h3><p>登录账户，继续你的对话。</p></div>
           <span class="entry-arrow" aria-hidden="true">↗</span>
@@ -30,7 +30,7 @@
       </div>
     </section>
     <footer class="site-container home-footer">
-      <span class="footer-signature">Ivan1105<span>.</span><small>灵感不设限。</small></span>
+      <span class="footer-signature">Ivan1105<span>.</span><small>愛されなくても君がいる</small></span>
       <div class="copyright"><p>闽公网安备 35032202000179号</p><p>Copyright &copy; 2021 - 2026 Ivan. All Rights Reserved.</p></div>
     </footer>
   </div>
